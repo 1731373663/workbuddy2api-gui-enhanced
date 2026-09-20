@@ -558,13 +558,13 @@ function RequestDetails({
 }) {
   if (loading && !rows) return <div style={{ padding: 16 }}><Spinner label="正在加载请求详情…" /></div>
   if (!rows || rows.length === 0) {
-    return <div className="text-faint" style={{ padding: '14px 18px', fontSize: 12.5 }}>该模型暂无最近请求详情（仅保留最近 500 条，网关重启后清空）。</div>
+    return <div className="text-faint" style={{ padding: '14px 18px', fontSize: 12.5 }}>该模型暂无最近请求详情（保留最近 100 条，网关重启后保留）。</div>
   }
   return (
     <div style={{ padding: '12px 14px 16px' }}>
       <div className="card-head" style={{ marginBottom: 8 }}>
         <h2 style={{ fontSize: 13 }}>最近请求 · {model}</h2>
-        <span className="hint">点击任意一条记录查看日志详情 · 最近 {rows.length} 条</span>
+        <span className="hint">点击任意一条记录查看日志详情 · 保留最近 100 条 · 网关重启后保留</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ minWidth: 720 }}>
@@ -599,7 +599,7 @@ function RequestDetails({
                   </div>
                 </td>
                 <td>
-                  {d.reasoning_effort || '—'}
+                  {d.reasoning_effort || '未声明'}
                   <div className="text-faint" style={{ fontSize: 10.5 }}>{d.reasoning_summary || ''}</div>
                 </td>
                 <td className="num" title={fmtNum(d.total_tokens)}>{fmtNum(d.total_tokens)}</td>
@@ -653,7 +653,7 @@ function RequestDetailModal({
               {detail.ttfb_ms > 0 && <span className="text-faint">（首字 {fmtMs(detail.ttfb_ms)}）</span>}
             </dd>
             <dt>推理强度</dt>
-            <dd className="text-warn">{detail.reasoning_effort || '—'}{detail.reasoning_summary ? ` · ${detail.reasoning_summary}` : ''}</dd>
+            <dd className="text-warn">{detail.reasoning_effort || '未声明'}{detail.reasoning_summary ? ` · ${detail.reasoning_summary}` : ''}</dd>
             <dt>状态</dt>
             <dd className={detail.ok ? 'text-ok' : 'text-danger'}>
               {detail.status || '—'} · {detail.stream ? '流式' : '非流式'}
