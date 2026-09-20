@@ -54,6 +54,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
   const [details, setDetails] = useState<Record<string, RequestDetail[]>>({})
   const [detailsLoading, setDetailsLoading] = useState<string | null>(null)
   const [detailsError, setDetailsError] = useState<string | null>(null)
+  const [selectedRequest, setSelectedRequest] = useState<{ model: string; detail: RequestDetail } | null>(null)
 
   const stats = resp?.stats ?? null
 
@@ -465,6 +466,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
                           model={m.model}
                           rows={details[m.model]}
                           loading={detailsLoading === m.model}
+                          onSelect={(detail) => setSelectedRequest({ model: m.model, detail })}
                         />
                       </td>
                     </tr>
@@ -530,12 +532,30 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
           }}
         />
       )}
+
+      {selectedRequest && (
+        <RequestDetailModal
+          model={selectedRequest.model}
+          detail={selectedRequest.detail}
+          onClose={() => setSelectedRequest(null)}
+        />
+      )}
     </>
   )
 }
 
-/** RequestDetails 单个模型的最近请求详情（Token 字段统一中文标签）。 */
-function RequestDetails({ model, rows, loading }: { model: string; rows?: RequestDetail[]; loading: boolean }) {
+/** RequestDetails 单个模型的最近请求列表；点击一条打开纵向详情。 */
+function RequestDetails({
+  model,
+  rows,
+  loading,
+  onSelect,
+}: {
+  model: string
+  rows?: RequestDetail[]
+  loading: boolean
+  onSelect: (detail: RequestDetail) => void
+}) {
   if (loading && !rows) return <div style={{ padding: 16 }}><Spinner label="正在加载请求详情…" /></div>
   if (!rows || rows.length === 0) {
     return <div className="text-faint" style={{ padding: '14px 18px', fontSize: 12.5 }}>该模型暂无最近请求详情（仅保留最近 500 条，网关重启后清空）。</div>
@@ -547,35 +567,25 @@ function RequestDetails({ model, rows, loading }: { model: string; rows?: Reques
         <span className="hint">仅内存保留最近 {rows.length} 条 · 网关重启后清空</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ minWidth: 1180 }}>
+        <table style={{ minWidth: 720 }}>
           <thead>
             <tr>
-              <th>时间 / 请求</th>
+              <th>时间 / 请求 ID</th>
               <th>状态</th>
               <th className="num">响应时间</th>
-              <th>推理程度</th>
-              <th className="num">输入 Token</th>
-              <th className="num">缓存命中输入 Token</th>
-              <th className="num">缓存未命中输入 Token</th>
-              <th className="num">输出 Token</th>
-              <th className="num">推理 Token</th>
+              <th>推理强度</th>
               <th className="num">总计 Token</th>
-              <th>路径 / 账号</th>
+              <th>路径</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((d) => (
-              <tr key={d.seq}>
+              <tr key={d.seq} className="request-row" onClick={() => onSelect(d)} title="点击查看完整日志详情">
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <div className="mono" style={{ fontSize: 11.5 }}>{fmtISO(d.started_at)}</div>
                   <div className="text-faint mono" style={{ fontSize: 10.5 }} title={d.request_id || d.trace_id || ''}>
                     {d.request_id || d.trace_id || ('#' + d.seq)}
                   </div>
-                  {d.error_message && (
-                    <div className="text-danger" style={{ fontSize: 11, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.error_message}>
-                      {d.error_code ? d.error_code + ': ' : ''}{d.error_message}
-                    </div>
-                  )}
                 </td>
                 <td>
                   <span className={d.ok ? 'text-ok' : 'text-danger'}>{d.status || '—'}</span>
@@ -591,15 +601,13 @@ function RequestDetails({ model, rows, loading }: { model: string; rows?: Reques
                   {d.reasoning_effort || '—'}
                   <div className="text-faint" style={{ fontSize: 10.5 }}>{d.reasoning_summary || ''}</div>
                 </td>
-                <td className="num" title={fmtNum(d.prompt_tokens)}>{fmtNum(d.prompt_tokens)}</td>
-                <td className="num text-ok" title={fmtNum(d.cache_hit_tokens)}>{fmtNum(d.cache_hit_tokens)}</td>
-                <td className="num" title={fmtNum(d.cache_miss_tokens)}>{fmtNum(d.cache_miss_tokens)}</td>
-                <td className="num" title={fmtNum(d.completion_tokens)}>{fmtNum(d.completion_tokens)}</td>
-                <td className="num" title={fmtNum(d.reasoning_tokens)}>{fmtNum(d.reasoning_tokens)}</td>
                 <td className="num" title={fmtNum(d.total_tokens)}>{fmtNum(d.total_tokens)}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <div className="mono" style={{ fontSize: 11 }}>{d.endpoint || '—'}{d.fallback ? '（已回退）' : ''}</div>
-                  <div className="text-faint mono" style={{ fontSize: 10.5 }} title={d.account_uid || ''}>{d.account_uid ? d.account_uid.slice(0, 8) : '—'} · {d.realm || '—'}</div>
+                  <div className="text-faint" style={{ fontSize: 10.5 }}>{d.realm || '—'}</div>
+                </td>
+                <td className="text-dim" style={{ width: 24, textAlign: 'right' }}>
+                  {d.error_message ? <span className="text-danger">!</span> : '›'}
                 </td>
               </tr>
             ))}
@@ -607,6 +615,100 @@ function RequestDetails({ model, rows, loading }: { model: string; rows?: Reques
         </table>
       </div>
     </div>
+  )
+}
+
+/** RequestDetailModal 单条请求的纵向日志详情，避免宽表右侧被截断。 */
+function RequestDetailModal({
+  model,
+  detail,
+  onClose,
+}: {
+  model: string
+  detail: RequestDetail
+  onClose: () => void
+}) {
+  const cacheTotal = detail.cache_hit_tokens + detail.cache_miss_tokens
+  const cacheRate = cacheTotal > 0 ? detail.cache_hit_tokens / cacheTotal : 0
+  const outputRate = detail.gen_ms > 0 ? detail.completion_tokens / (detail.gen_ms / 1000) : 0
+  return (
+    <Modal title="日志详情" wide className="request-detail-modal" onClose={onClose}>
+      <div className="request-detail">
+        <section className="request-detail-section">
+          <h3>基本信息</h3>
+          <dl className="kv request-detail-kv">
+            <dt>请求 ID</dt>
+            <dd className="mono">{detail.request_id || detail.trace_id || `#${detail.seq}`}</dd>
+            <dt>模型</dt>
+            <dd className="mono">{model}</dd>
+            <dt>账号 / 分组</dt>
+            <dd>{detail.account_uid ? detail.account_uid.slice(0, 8) : '—'} · {detail.realm || '—'}</dd>
+            <dt>响应时间</dt>
+            <dd className="text-ok">
+              {fmtMs(detail.latency_ms)}
+              {detail.ttfb_ms > 0 && <span className="text-faint">（首字 {fmtMs(detail.ttfb_ms)}）</span>}
+            </dd>
+            <dt>推理强度</dt>
+            <dd className="text-warn">{detail.reasoning_effort || '—'}{detail.reasoning_summary ? ` · ${detail.reasoning_summary}` : ''}</dd>
+            <dt>状态</dt>
+            <dd className={detail.ok ? 'text-ok' : 'text-danger'}>
+              {detail.status || '—'} · {detail.stream ? '流式' : '非流式'}
+            </dd>
+            <dt>入口路径</dt>
+            <dd className="mono">{detail.endpoint || '—'}{detail.fallback ? '（已回退）' : ''} · 尝试 {detail.attempts || 1} 次</dd>
+            <dt>结束原因</dt>
+            <dd>{detail.finish_reason || '—'}</dd>
+          </dl>
+        </section>
+
+        <section className="request-detail-section">
+          <h3>Token 明细</h3>
+          <dl className="request-detail-box request-detail-kv">
+            <dt>输入 Token</dt>
+            <dd>{fmtNum(detail.prompt_tokens)}</dd>
+            <dt>缓存命中输入 Token</dt>
+            <dd className="text-ok">{fmtNum(detail.cache_hit_tokens)}</dd>
+            <dt>缓存未命中输入 Token</dt>
+            <dd>{fmtNum(detail.cache_miss_tokens)}</dd>
+            <dt>输出 Token</dt>
+            <dd>{fmtNum(detail.completion_tokens)}</dd>
+            <dt>推理 Token</dt>
+            <dd className="text-warn">{fmtNum(detail.reasoning_tokens)}</dd>
+            <dt>总计 Token</dt>
+            <dd>{fmtNum(detail.total_tokens)}</dd>
+          </dl>
+        </section>
+
+        <section className="request-detail-section">
+          <h3>性能与计费</h3>
+          <dl className="request-detail-box request-detail-kv">
+            <dt>缓存命中率</dt>
+            <dd className={hitTone(cacheRate)}>{fmtPct(cacheRate)}</dd>
+            <dt>生成速度</dt>
+            <dd>{outputRate > 0 ? `${outputRate.toFixed(1)} tok/s` : '—'}</dd>
+            <dt>生成时长</dt>
+            <dd>{fmtMs(detail.gen_ms)}</dd>
+            <dt>扣费</dt>
+            <dd>{fmtCredit(detail.credit)} 积分</dd>
+            <dt>工具调用 / 图片</dt>
+            <dd>{detail.tool_calls} / {detail.image_inputs}</dd>
+            <dt>参数</dt>
+            <dd>
+              temperature {detail.temperature ?? '—'} · top_p {detail.top_p ?? '—'} · max {detail.max_output_tokens ? fmtNum(detail.max_output_tokens) : '—'}
+            </dd>
+          </dl>
+        </section>
+
+        {detail.error_message && (
+          <section className="request-detail-section">
+            <h3 className="text-danger">错误详情</h3>
+            <div className="request-detail-error mono">
+              {detail.error_code ? detail.error_code + ': ' : ''}{detail.error_message}
+            </div>
+          </section>
+        )}
+      </div>
+    </Modal>
   )
 }
 

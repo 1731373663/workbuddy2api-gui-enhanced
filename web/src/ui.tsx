@@ -130,12 +130,14 @@ export function Modal({
   onClose,
   children,
   wide,
+  className,
   footer,
 }: {
   title: string
   onClose: () => void
   children: React.ReactNode
   wide?: boolean
+  className?: string
   footer?: React.ReactNode
 }) {
   // Esc 关闭 + 打开期间锁定页面滚动。
@@ -160,7 +162,7 @@ export function Modal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className={`modal ${wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true">
+      <div className={`modal ${wide ? 'modal-wide' : ''} ${className || ''}`} role="dialog" aria-modal="true">
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="关闭">
