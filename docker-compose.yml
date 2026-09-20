@@ -23,7 +23,7 @@ services:
       WBGUI_PASSWORD: "workbuddy"
       # 网关地址与密钥（密钥留空时会自动从挂载进来的网关 config.json 里读取）
       # 容器内 127.0.0.1 指向面板自己，因此这里要用宿主机网关端口。
-      WBGUI_GATEWAY_URL: "http://172.17.0.1:7863"
+      WBGUI_GATEWAY_URL: "http://host.docker.internal:7863"
       # 账号凭证目录，以及网关配置文件（供「网关配置」页在线编辑）
       WBGUI_AUTH_DIR: "/app/auths"
       WBGUI_CONFIG_FILE: "/gateway/config.json"
@@ -53,10 +53,10 @@ services:
       # 注意不要与网关的 config.json 共用同一路径 —— 两者字段不同。
       - ./config.json:/app/config.json:ro
       # 与网关共享账号目录：面板直接读写网关的 auths/
-      # 宿主机路径需按实际部署位置调整（官方默认 /root/workbuddy2api）
-      - /root/workbuddy2api/auths:/app/auths
+      # 与网关部署目录共享账号目录。
+      - ../workbuddy2api/auths:/app/auths
       # 网关的 config.json 挂到独立路径，仅供「网关配置」页编辑，不与面板配置混用
-      - /root/workbuddy2api/config.json:/gateway/config.json
+      - ../workbuddy2api/config.json:/gateway/config.json
       # 面板数据目录（配置备份等）：挂到宿主机持久化，避免容器重建丢失
       - ./data:/data
       # docker.sock：用于「系统」页重启网关容器。

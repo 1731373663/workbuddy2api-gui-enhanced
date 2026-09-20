@@ -9,7 +9,11 @@ FROM node:20-alpine AS web
 WORKDIR /src
 # 先只拷 manifest，让依赖层可缓存（源码改动不会触发重新 npm ci）。
 COPY web/package.json web/package-lock.json* ./web/
-RUN cd web && (npm ci --no-audit --no-fund || npm install --no-audit --no-fund)
+# package-lock 可能来自 Windows 或其他平台，Rollup 的平台可选依赖会缺失。
+# 构建阶段按当前 Linux/musl 平台重新解析依赖，避免 @rollup/rollup-linux-x64-musl 丢失。
+RUN cd web \
+ && rm -f package-lock.json \
+ && npm install --no-audit --no-fund
 # 拷源码与 embed 占位目录的父路径（vite outDir 指向 ../internal/webui/dist）。
 COPY web ./web
 COPY internal/webui/dist ./internal/webui/dist
