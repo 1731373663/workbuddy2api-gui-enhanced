@@ -564,7 +564,7 @@ function RequestDetails({
     <div style={{ padding: '12px 14px 16px' }}>
       <div className="card-head" style={{ marginBottom: 8 }}>
         <h2 style={{ fontSize: 13 }}>最近请求 · {model}</h2>
-        <span className="hint">仅内存保留最近 {rows.length} 条 · 网关重启后清空</span>
+        <span className="hint">点击任意一条记录查看日志详情 · 最近 {rows.length} 条</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ minWidth: 720 }}>
@@ -576,6 +576,7 @@ function RequestDetails({
               <th>推理强度</th>
               <th className="num">总计 Token</th>
               <th>路径</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -606,8 +607,11 @@ function RequestDetails({
                   <div className="mono" style={{ fontSize: 11 }}>{d.endpoint || '—'}{d.fallback ? '（已回退）' : ''}</div>
                   <div className="text-faint" style={{ fontSize: 10.5 }}>{d.realm || '—'}</div>
                 </td>
-                <td className="text-dim" style={{ width: 24, textAlign: 'right' }}>
-                  {d.error_message ? <span className="text-danger">!</span> : '›'}
+                <td style={{ width: 88, textAlign: 'right' }}>
+                  <span className="request-detail-link">
+                    {d.error_message ? <span className="text-danger">错误 · </span> : null}
+                    查看详情
+                  </span>
                 </td>
               </tr>
             ))}

@@ -494,6 +494,22 @@ tbody tr:hover {
 .request-row:hover {
   background: rgba(79, 140, 255, 0.07);
 }
+.request-row:hover .request-detail-link {
+  background: rgba(79, 140, 255, 0.16);
+  border-color: rgba(79, 140, 255, 0.38);
+  color: #a8c8ff;
+}
+.request-detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border: 1px solid rgba(79, 140, 255, 0.24);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
 
 .request-detail {
   display: flex;
