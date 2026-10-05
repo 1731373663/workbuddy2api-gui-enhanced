@@ -1,6 +1,18 @@
 // Accounts.tsx 账号管理：列表 / 筛选 / 单账号操作 / 批量任务 / 详情 / 导入导出。
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  BadgeDollarSign,
+  CheckCircle2,
+  FileDown,
+  KeyRound,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Trash2,
+  UsersRound,
+} from 'lucide-react'
 import { api, ApiError } from '../api'
 import type { Account, AccountProfile, SessionInfo } from '../types'
 import {
@@ -185,13 +197,16 @@ export default function Accounts({ session }: { session: SessionInfo }) {
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void load()} disabled={loading}>
-            {loading ? <Spinner /> : '🔄'} 刷新
+            <RefreshCw size={14} className={loading ? 'spin-icon' : undefined} aria-hidden="true" />
+            刷新
           </button>
           <button className="btn" onClick={() => setShowImport(true)} disabled={writeDisabled} title={writeDisabled ? '只读模式' : ''}>
-            📥 导入凭证
+            <FileDown size={14} aria-hidden="true" />
+            导入凭证
           </button>
           <Link className="btn btn-primary" to="/login">
-            ➕ 添加账号
+            <Plus size={14} aria-hidden="true" />
+            添加账号
           </Link>
         </div>
       </div>
@@ -221,8 +236,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
         </Alert>
       )}
 
-      {/* 批量操作区 */}
-      <div className="card">
+      <section className="card">
         <div className="card-head">
           <h2>批量操作</h2>
           <span className="hint">
@@ -231,16 +245,20 @@ export default function Accounts({ session }: { session: SessionInfo }) {
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void runBatch('checkin')} disabled={writeDisabled || accounts.length === 0}>
-            ✅ 批量签到
+            <CheckCircle2 size={14} aria-hidden="true" />
+            批量签到
           </button>
           <button className="btn" onClick={() => void runBatch('refresh')} disabled={writeDisabled || accounts.length === 0}>
-            🔑 批量刷新 Token
+            <KeyRound size={14} aria-hidden="true" />
+            批量刷新 Token
           </button>
           <button className="btn" onClick={() => void runBatch('travel')} disabled={writeDisabled || accounts.length === 0}>
-            🐱 批量猫猫旅行
+            <Sparkles size={14} aria-hidden="true" />
+            批量猫猫旅行
           </button>
           <button className="btn" onClick={() => void runBatch('credits')} disabled={accounts.length === 0}>
-            💰 批量查积分
+            <BadgeDollarSign size={14} aria-hidden="true" />
+            批量查积分
           </button>
           {selected.size > 0 && (
             <button className="btn btn-ghost" onClick={() => setSelected(new Set())}>
@@ -248,33 +266,33 @@ export default function Accounts({ session }: { session: SessionInfo }) {
             </button>
           )}
         </div>
-        <div className="field" style={{ marginTop: 13, marginBottom: 0 }}>
-          <div className="desc">
-            批量任务在后台串行执行（账号间限速，避免触发上游风控），可随时关闭进度窗口，任务会继续跑完。
-          </div>
+        <div className="desc" style={{ marginTop: 11 }}>
+          批量任务在后台串行执行（账号间限速，避免触发上游风控），可随时关闭进度窗口，任务会继续跑完。
         </div>
-      </div>
+      </section>
 
-      {/* 账号列表 */}
-      <div className="card">
+      <section className="card">
         <div className="card-head">
           <h2>账号列表</h2>
-          <div className="page-actions">
+          <span className="hint">显示 {filtered.length} / {accounts.length} 个账号</span>
+        </div>
+        <div className="filter-bar" style={{ marginBottom: 14 }}>
+          <div className="filter-search">
+            <Search size={14} aria-hidden="true" />
             <input
               type="text"
               placeholder="搜索 uid / 昵称…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              style={{ width: 190 }}
             />
-            <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} style={{ width: 150 }}>
-              <option value="all">全部</option>
-              <option value="healthy">仅正常</option>
-              <option value="cooling">仅冷却中</option>
-              <option value="problem">仅异常</option>
-              <option value="expiring">Token 需刷新</option>
-            </select>
           </div>
+          <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
+            <option value="all">全部状态</option>
+            <option value="healthy">仅正常</option>
+            <option value="cooling">仅冷却中</option>
+            <option value="problem">仅异常</option>
+            <option value="expiring">Token 需刷新</option>
+          </select>
         </div>
 
         {loading && accounts.length === 0 ? (
@@ -283,10 +301,12 @@ export default function Accounts({ session }: { session: SessionInfo }) {
           <Empty>
             {accounts.length === 0 ? (
               <>
+                <UsersRound size={22} aria-hidden="true" />
                 还没有任何账号。
                 <div style={{ marginTop: 10 }}>
                   <Link className="btn btn-primary btn-sm" to="/login">
-                    ➕ 添加第一个账号
+                    <Plus size={13} aria-hidden="true" />
+                    添加第一个账号
                   </Link>
                 </div>
               </>
@@ -296,7 +316,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
           </Empty>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="account-table">
               <thead>
                 <tr>
                   <th style={{ width: 34 }}>
@@ -316,7 +336,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
                   const b = statusBadge(a.status)
                   const busy = busyUid === a.uid
                   return (
-                    <tr key={a.uid}>
+                    <tr key={a.uid} className={selected.has(a.uid) ? 'is-selected' : undefined}>
                       <td>
                         <input
                           type="checkbox"
@@ -326,15 +346,10 @@ export default function Accounts({ session }: { session: SessionInfo }) {
                         />
                       </td>
                       <td>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          style={{ padding: 0, color: 'var(--text)' }}
-                          onClick={() => setDetailUid(a.uid)}
-                          title="查看详情"
-                        >
+                        <button className="account-name" onClick={() => setDetailUid(a.uid)} title="查看详情">
                           {displayName(a)}
                         </button>
-                        <div className="mono text-faint" style={{ fontSize: 11 }}>
+                        <div className="row-caption">
                           {a.uid.slice(0, 8)}
                           {a.in_gateway && a.in_flight > 0 && (
                             <span className="text-accent"> · 在途 {a.in_flight}</span>
@@ -344,20 +359,12 @@ export default function Accounts({ session }: { session: SessionInfo }) {
                       <td>
                         <Badge cls={b.cls}>{b.text}</Badge>
                         {a.cooling && (
-                          <div className="text-faint" style={{ fontSize: 11.5, marginTop: 3 }}>
+                          <div className="row-caption">
                             {coolKindText(a.cool_kind)} · 剩 {fmtDuration(a.cool_remaining_sec)}
                           </div>
                         )}
-                        {a.disabled && a.reason && (
-                          <div className="text-faint" style={{ fontSize: 11.5, marginTop: 3 }}>
-                            {a.reason}
-                          </div>
-                        )}
-                        {a.status === 'token_expired' && (
-                          <div className="text-faint" style={{ fontSize: 11.5, marginTop: 3 }}>
-                            需刷新或重新登录
-                          </div>
-                        )}
+                        {a.disabled && a.reason && <div className="row-caption">{a.reason}</div>}
+                        {a.status === 'token_expired' && <div className="row-caption">需刷新或重新登录</div>}
                       </td>
                       <td className="num">{fmtNum(a.live_credits ?? a.credits)}</td>
                       <td className="num text-dim" style={{ fontSize: 12 }}>
@@ -371,15 +378,13 @@ export default function Accounts({ session }: { session: SessionInfo }) {
                         ) : (
                           <span className="text-ok">有效</span>
                         )}
-                        <div className="text-faint" style={{ fontSize: 11 }}>
-                          {fmtTime(a.expires_at)}
-                        </div>
+                        <div className="row-caption">{fmtTime(a.expires_at)}</div>
                       </td>
                       <td style={{ fontSize: 12 }} className="text-dim">
                         {fmtISO(a.last_success || a.last_err)}
                       </td>
                       <td>
-                        <div className="page-actions" style={{ gap: 5 }}>
+                        <div className="page-actions" style={{ gap: 5, justifyContent: 'flex-start' }}>
                           <button
                             className="btn btn-sm"
                             disabled={busy || writeDisabled}
@@ -421,6 +426,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
                                     : '删除该账号凭证文件'
                             }
                           >
+                            <Trash2 size={12} aria-hidden="true" />
                             删除
                           </button>
                           {busy && <Spinner />}
@@ -433,7 +439,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       {detailUid && <AccountDetail uid={detailUid} onClose={() => setDetailUid(null)} />}
 
@@ -541,7 +547,7 @@ function AccountDetail({ uid, onClose }: { uid: string; onClose: () => void }) {
             <div className="stat">
               <div className="stat-label">猫猫旅行</div>
               <div className="stat-value small" style={{ fontSize: 15 }}>
-                {profile?.buddy ? profile.buddy.name || '已领养' : profile?.buddy_error ? '查询失败' : '未领养'}
+                {profile?.buddy ? (profile.buddy.name || '已领养') : profile?.buddy_error ? '查询失败' : '未领养'}
               </div>
               <div className="stat-sub">
                 {profile?.travel
@@ -565,7 +571,7 @@ function AccountDetail({ uid, onClose }: { uid: string; onClose: () => void }) {
             <dt>Token 过期</dt>
             <dd>{fmtTime(a.expires_at)}</dd>
             <dt>Refresh Token</dt>
-            <dd>{a.has_refresh_token ? '✅ 存在' : '❌ 缺失（无法刷新，需重登）'}</dd>
+            <dd>{a.has_refresh_token ? '存在' : '缺失（无法刷新，需重登）'}</dd>
             <dt>网关状态</dt>
             <dd>
               <Badge cls={statusBadge(a.status).cls}>{statusBadge(a.status).text}</Badge>

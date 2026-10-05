@@ -1,3 +1,4 @@
+import { CircleCheck, KeyRound, Power, RefreshCw } from 'lucide-react'
 // System.tsx 系统页：运行信息、容器状态与控制、任务历史、使用说明。
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -73,7 +74,7 @@ export default function System({
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void load()} disabled={loading}>
-            {loading ? <Spinner /> : '🔄'} 刷新
+            {loading ? <Spinner /> : <RefreshCw size={14} aria-hidden="true" />} 刷新
           </button>
           <button
             className="btn btn-primary"
@@ -87,7 +88,7 @@ export default function System({
                   : '重启网关容器以加载新账号/新配置'
             }
           >
-            🔁 重启网关
+            <Power size={14} aria-hidden="true" /> 重启网关
           </button>
         </div>
       </div>
@@ -120,7 +121,7 @@ export default function System({
           <dt>身份标识</dt>
           <dd>
             {gatewayServiceOK ? (
-              <>service = <span className="mono">workbuddy2api</span> ✅</>
+              <>service = <span className="mono">workbuddy2api</span> <CircleCheck size={14} aria-hidden="true" /></>
             ) : (
               <span className="text-danger">{info?.gateway_health_error || '无法确认身份'}</span>
             )}
@@ -172,7 +173,7 @@ export default function System({
             disabled={!session.password_changeable}
             title={session.password_changeable ? '修改面板登录口令' : '服务端未配置凭据持久化，无法从网页改密码'}
           >
-            🔑 修改密码
+            <KeyRound size={14} aria-hidden="true" /> 修改密码
           </button>
         </div>
         <dl className="kv">
@@ -196,7 +197,7 @@ export default function System({
             )}
           </dd>
           <dt>Docker 可用</dt>
-          <dd>{info?.docker_available ? '✅ 是' : '❌ 否（容器控制已降级）'}</dd>
+          <dd>{info?.docker_available ? '<CircleCheck size={14} aria-hidden="true" /> 是' : '<CircleX size={14} aria-hidden="true" /> 否（容器控制已降级）'}</dd>
         </dl>
       </div>
 

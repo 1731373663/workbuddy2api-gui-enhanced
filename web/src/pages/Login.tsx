@@ -1,5 +1,6 @@
 // Login.tsx 面板登录页。
 import { useState } from 'react'
+import { LockKeyhole } from 'lucide-react'
 import { api, ApiError } from '../api'
 import type { SessionInfo } from '../types'
 import { Alert, Spinner } from '../ui'
@@ -37,9 +38,11 @@ export default function Login({
   return (
     <div className="login-wrap">
       <div className="login-card">
-        <div className="login-logo">WB</div>
-        <h1>WorkBuddy 控制台</h1>
-        <div className="sub">workbuddy2api 网关管理面板</div>
+        <div className="login-logo">
+          <LockKeyhole size={19} strokeWidth={1.8} aria-hidden="true" />
+        </div>
+        <h1>登录控制台</h1>
+        <div className="sub">管理 workbuddy2api 账号池、请求统计与网关配置</div>
 
         {banner && <Alert kind="warn" onClose={onCloseBanner}>{banner}</Alert>}
         {error && <Alert kind="error">{error}</Alert>}
@@ -79,7 +82,6 @@ export default function Login({
 
         {info?.using_default_password && (
           <div className="alert alert-info" style={{ marginTop: 16, marginBottom: 0, fontSize: 12.5 }}>
-            <span className="alert-icon">ℹ️</span>
             <div>
               当前使用默认口令 <span className="mono">admin / workbuddy</span>。首次登录后请修改：在服务端配置文件中设置
               <span className="mono"> ui.username / ui.password</span>，或设置环境变量

@@ -1,3 +1,4 @@
+import { RefreshCw, Send, Square, Trash2 } from 'lucide-react'
 // Playground.tsx 聊天测试台：验证网关的 OpenAI 兼容接口、流式输出与会话粘性。
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, ApiError, streamChat } from '../api'
@@ -201,10 +202,10 @@ export default function Playground() {
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void loadModels()}>
-            🔄 刷新模型列表
+            <RefreshCw size={14} aria-hidden="true" /> 刷新模型列表
           </button>
           <button className="btn" onClick={clearChat} disabled={messages.length === 0}>
-            🗑️ 清空对话
+            <Trash2 size={14} aria-hidden="true" /> 清空对话
           </button>
         </div>
       </div>
@@ -353,11 +354,11 @@ export default function Playground() {
           <div className="page-actions" style={{ marginTop: 11 }}>
             {busy ? (
               <button className="btn btn-danger" onClick={stop}>
-                ⏹ 停止
+                <Square size={14} aria-hidden="true" /> 停止
               </button>
             ) : (
               <button className="btn btn-primary" onClick={() => void send()} disabled={!input.trim() || !model}>
-                ▶️ 发送
+                <Send size={14} aria-hidden="true" /> 发送
               </button>
             )}
             <span className="hint">Ctrl + Enter 快捷发送</span>

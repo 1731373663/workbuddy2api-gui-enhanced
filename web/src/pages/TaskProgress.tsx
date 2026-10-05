@@ -1,3 +1,4 @@
+import { CircleCheck } from 'lucide-react'
 // TaskProgress.tsx 批量任务进度弹窗：提交任务后轮询进度直到完成。
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
@@ -70,14 +71,14 @@ export default function TaskProgress({
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
             <span>
-              {task.running ? <Spinner label="执行中" /> : <span className="text-ok">✅ 已完成</span>}
+              {task.running ? <Spinner label="执行中" /> : <span className="text-ok"><CircleCheck size={14} aria-hidden="true" /> 已完成</span>}
             </span>
             <span className="text-dim">
               {task.done} / {task.total} · 成功 {task.ok} · 失败 {task.failed}
             </span>
           </div>
           <div className="progress" style={{ marginBottom: 16 }}>
-            <div className="progress-bar" style={{ width: `${pct}%`, background: task.failed > 0 ? 'var(--warn)' : undefined }} />
+            <div className="progress-bar" style={{ transform: `scaleX(${pct / 100})`, background: task.failed > 0 ? 'var(--warn)' : undefined }} />
           </div>
 
           {task.error && <Alert kind="error">{task.error}</Alert>}

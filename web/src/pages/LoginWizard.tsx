@@ -1,3 +1,4 @@
+import { ExternalLink, Info, KeyRound, Plus, RefreshCw, UsersRound } from 'lucide-react'
 // LoginWizard.tsx 网页版 OAuth 设备授权登录：替代 login.sh 的全流程。
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -106,7 +107,7 @@ export default function LoginWizard({
         </div>
         <div className="page-actions">
           <Link className="btn" to="/accounts">
-            ← 返回账号管理
+             返回账号管理
           </Link>
         </div>
       </div>
@@ -184,7 +185,7 @@ export default function LoginWizard({
             </ul>
           </Alert>
           <button className="btn btn-primary" onClick={() => void start()} disabled={busy || writeDisabled}>
-            {busy ? <Spinner /> : '🔑'} 发起授权（{region === 'global' ? '国际版' : '国内版'}）
+            {busy ? <Spinner /> : <KeyRound size={14} aria-hidden="true" />} 发起授权（{region === 'global' ? '国际版' : '国内版'}）
           </button>
         </div>
       )}
@@ -204,13 +205,13 @@ export default function LoginWizard({
           </div>
           <div className="page-actions">
             <a className="btn btn-primary" href={sess.auth_url} target="_blank" rel="noopener noreferrer">
-              🔗 打开授权页面
+              <ExternalLink size={14} aria-hidden="true" /> 打开授权页面
             </a>
             <button className="btn" onClick={() => void copyURL()}>
-              {copied ? '✓ 已复制' : '📋 复制链接'}
+              {copied ? '✓ 已复制' : '<Copy size={14} aria-hidden="true" /> 复制链接'}
             </button>
             <button className="btn" onClick={() => void poll(sess.id)}>
-              🔄 立即检查
+              <RefreshCw size={14} aria-hidden="true" /> 立即检查
             </button>
             <button className="btn btn-ghost" onClick={() => void cancel()}>
               取消
@@ -246,7 +247,7 @@ export default function LoginWizard({
           )}
           <div className="page-actions" style={{ marginTop: 14 }}>
             <Link className="btn btn-primary" to="/accounts">
-              👥 去账号管理
+              <UsersRound size={14} aria-hidden="true" /> 去账号管理
             </Link>
             <button
               className="btn"
@@ -256,7 +257,7 @@ export default function LoginWizard({
                 void start()
               }}
             >
-              ➕ 再添加一个账号
+              <Plus size={14} aria-hidden="true" /> 再添加一个账号
             </button>
           </div>
         </div>
@@ -284,7 +285,7 @@ export default function LoginWizard({
                 void start()
               }}
             >
-              🔄 重新发起
+              <RefreshCw size={14} aria-hidden="true" /> 重新发起
             </button>
             <Link className="btn" to="/accounts">
               返回账号管理
@@ -304,7 +305,7 @@ export default function LoginWizard({
           <span className="mono"> auths/workbuddy-*.json </span>内容。
         </p>
         <button className="btn" onClick={() => setManualUID(manualUID ? null : 'hint')}>
-          ℹ️ 了解导入方式
+          <Info size={14} aria-hidden="true" /> 了解导入方式
         </button>
         {manualUID && (
           <div className="muted-box" style={{ marginTop: 11 }}>

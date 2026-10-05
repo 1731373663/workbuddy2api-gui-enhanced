@@ -1,6 +1,7 @@
 // Dashboard.tsx 仪表盘：账号池健康度、积分总览、异常提示。
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CircleCheck, RefreshCw, UserPlus } from 'lucide-react'
 import { api, ApiError } from '../api'
 import type { Account, Overview } from '../types'
 import { Alert, Badge, displayName, fmtDuration, fmtISO, fmtNum, Spinner, statusBadge } from '../ui'
@@ -29,7 +30,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     void load()
-    // 每 15 秒静默刷新，让冷却倒计时与在途数保持新鲜。
     const timer = setInterval(() => void load(true), 15_000)
     return () => clearInterval(timer)
   }, [load])
@@ -56,7 +56,8 @@ export default function Dashboard() {
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void load()} disabled={loading}>
-            {loading ? <Spinner /> : '🔄'} 立即刷新
+            <RefreshCw size={14} className={loading ? 'spin-icon' : undefined} aria-hidden="true" />
+            立即刷新
           </button>
         </div>
       </div>
@@ -104,32 +105,32 @@ export default function Dashboard() {
 
       {ov && (
         <>
-          <div className="grid grid-stats" style={{ marginBottom: 16 }}>
-            <Stat
+          <section className="summary-strip" aria-label="账号池概览">
+            <SummaryItem
               label="网关账号池"
               value={`${ov.healthy}/${ov.total}`}
-              sub={ov.total === 0 ? '尚未添加任何账号' : `可用 / 总数`}
+              sub={ov.total === 0 ? '尚未添加任何账号' : '可用 / 总数'}
               tone={ov.healthy === 0 ? 'danger' : ov.healthy < ov.total ? 'warn' : 'ok'}
             />
-            <Stat label="冷却中" value={String(ov.cooling)} sub="限流 / 熔断冷却" tone={ov.cooling > 0 ? 'warn' : undefined} />
-            <Stat label="已禁用" value={String(ov.disabled)} sub="需重新登录" tone={ov.disabled > 0 ? 'danger' : undefined} />
-            <Stat
+            <SummaryItem label="冷却中" value={String(ov.cooling)} sub="限流 / 熔断冷却" tone={ov.cooling > 0 ? 'warn' : undefined} />
+            <SummaryItem label="已禁用" value={String(ov.disabled)} sub="需重新登录" tone={ov.disabled > 0 ? 'danger' : undefined} />
+            <SummaryItem
               label="剩余积分"
               value={fmtNum(ov.credits.remain)}
               sub={ov.credits.size > 0 ? `总量 ${fmtNum(ov.credits.size)}` : '未查询到配额'}
             />
-            <Stat label="在途请求" value={String(ov.in_flight)} sub={`满载账号 ${ov.in_flight_full} 个`} />
-            <Stat label="粘性会话" value={String(ov.sticky_sessions)} sub={`Redis：${ov.redis_mode}`} />
-            <Stat
+            <SummaryItem label="在途请求" value={String(ov.in_flight)} sub={`满载账号 ${ov.in_flight_full} 个`} />
+            <SummaryItem label="粘性会话" value={String(ov.sticky_sessions)} sub={`Redis：${ov.redis_mode}`} />
+            <SummaryItem
               label="凭证文件"
               value={String(ov.file_count)}
               sub={ov.expired > 0 ? `${ov.expired} 个已过期` : '全部有效'}
               tone={ov.expired > 0 ? 'warn' : undefined}
             />
-          </div>
+          </section>
 
           <div className="grid grid-2">
-            <div className="card">
+            <section className="card">
               <div className="card-head">
                 <h2>积分最高的账号</h2>
                 <Link to="/accounts" className="hint">
@@ -138,10 +139,12 @@ export default function Dashboard() {
               </div>
               {topAccounts.length === 0 ? (
                 <div className="empty">
+                  <UserPlus size={22} aria-hidden="true" />
                   还没有账号。
                   <div style={{ marginTop: 10 }}>
                     <Link className="btn btn-primary btn-sm" to="/login">
-                      ➕ 添加第一个账号
+                      <UserPlus size={13} aria-hidden="true" />
+                      添加第一个账号
                     </Link>
                   </div>
                 </div>
@@ -163,9 +166,7 @@ export default function Dashboard() {
                           <tr key={a.uid}>
                             <td>
                               <div>{displayName(a)}</div>
-                              <div className="mono text-faint" style={{ fontSize: 11 }}>
-                                {a.uid.slice(0, 8)}
-                              </div>
+                              <div className="row-caption">{a.uid.slice(0, 8)}</div>
                             </td>
                             <td>
                               <Badge cls={b.cls}>{b.text}</Badge>
@@ -179,15 +180,18 @@ export default function Dashboard() {
                   </table>
                 </div>
               )}
-            </div>
+            </section>
 
-            <div className="card">
+            <section className="card">
               <div className="card-head">
                 <h2>需要处理的账号</h2>
                 <span className="hint">{problems.length} 个</span>
               </div>
               {problems.length === 0 ? (
-                <div className="empty">🎉 所有账号状态正常</div>
+                <div className="empty">
+                  <CircleCheck size={22} aria-hidden="true" />
+                  所有账号状态正常
+                </div>
               ) : (
                 <div className="table-wrap">
                   <table>
@@ -205,9 +209,7 @@ export default function Dashboard() {
                           <tr key={a.uid}>
                             <td>
                               <div>{displayName(a)}</div>
-                              <div className="mono text-faint" style={{ fontSize: 11 }}>
-                                {a.uid.slice(0, 8)}
-                              </div>
+                              <div className="row-caption">{a.uid.slice(0, 8)}</div>
                             </td>
                             <td>
                               <Badge cls={b.cls}>{b.text}</Badge>
@@ -232,10 +234,10 @@ export default function Dashboard() {
                   </table>
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
-          <div className="card">
+          <section className="card">
             <div className="card-head">
               <h2>运行信息</h2>
             </div>
@@ -255,14 +257,14 @@ export default function Dashboard() {
               <dt>服务端时间</dt>
               <dd>{new Date(ov.server_time).toLocaleString('zh-CN', { hour12: false })}</dd>
             </dl>
-          </div>
+          </section>
         </>
       )}
     </>
   )
 }
 
-function Stat({
+function SummaryItem({
   label,
   value,
   sub,
@@ -275,10 +277,10 @@ function Stat({
 }) {
   const cls = tone === 'ok' ? 'text-ok' : tone === 'warn' ? 'text-warn' : tone === 'danger' ? 'text-danger' : ''
   return (
-    <div className="stat">
-      <div className="stat-label">{label}</div>
-      <div className={`stat-value ${cls}`}>{value}</div>
-      {sub && <div className="stat-sub">{sub}</div>}
+    <div className="summary-item">
+      <div className="summary-label">{label}</div>
+      <div className={`summary-value ${cls}`}>{value}</div>
+      {sub && <div className="summary-sub">{sub}</div>}
     </div>
   )
 }

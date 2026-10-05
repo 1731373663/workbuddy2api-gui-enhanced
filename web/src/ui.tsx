@@ -1,6 +1,6 @@
 // ui.tsx 通用展示组件与格式化工具。
-
 import React, { useEffect } from 'react'
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 
 /** 把 Unix 秒格式化为本地时间字符串。 */
 export function fmtTime(sec?: number): string {
@@ -34,7 +34,7 @@ export function fmtISO(iso?: string): string {
   return d.toLocaleString('zh-CN', { hour12: false })
 }
 
-/** 格式化秒数为「1h 23m 45s」。 */
+/** 格式化秒数为「1小时23分」。 */
 export function fmtDuration(sec?: number): string {
   if (sec === undefined || sec === null || sec <= 0) return '—'
   const h = Math.floor(sec / 3600)
@@ -111,14 +111,22 @@ export function Alert({
   children: React.ReactNode
   onClose?: () => void
 }) {
-  const icon = { error: '⛔', warn: '⚠️', ok: '✅', info: 'ℹ️' }[kind]
+  const Icon = {
+    error: AlertCircle,
+    warn: AlertTriangle,
+    ok: CheckCircle2,
+    info: Info,
+  }[kind]
+
   return (
     <div className={`alert alert-${kind}`}>
-      <span className="alert-icon">{icon}</span>
+      <span className="alert-icon">
+        <Icon size={16} strokeWidth={1.9} aria-hidden="true" />
+      </span>
       <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
       {onClose && (
-        <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="关闭">
-          ✕
+        <button className="btn btn-ghost btn-sm btn-icon" onClick={onClose} aria-label="关闭">
+          <X size={14} aria-hidden="true" />
         </button>
       )}
     </div>
@@ -165,8 +173,8 @@ export function Modal({
       <div className={`modal ${wide ? 'modal-wide' : ''} ${className || ''}`} role="dialog" aria-modal="true">
         <div className="modal-head">
           <h2>{title}</h2>
-          <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="关闭">
-            ✕
+          <button className="btn btn-ghost btn-sm btn-icon" onClick={onClose} aria-label="关闭">
+            <X size={15} aria-hidden="true" />
           </button>
         </div>
         {children}
@@ -227,7 +235,7 @@ export function ConfirmDialog({
         </>
       }
     >
-      <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'var(--text-dim)' }}>{message}</div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'var(--muted)' }}>{message}</div>
     </Modal>
   )
 }

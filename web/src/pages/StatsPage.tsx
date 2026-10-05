@@ -1,3 +1,4 @@
+import { RefreshCw, RotateCcw } from 'lucide-react'
 // StatsPage.tsx 请求统计：按模型分开统计首字延迟、吞吐、缓存命中、输入输出与扣费。
 //
 // 数据源是网关的 /v1/stats —— 网关是所有流量的必经点，因此这里看到的**包含**
@@ -168,7 +169,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
             自动刷新（10s）
           </label>
           <button className="btn" onClick={() => void load()} disabled={loading}>
-            {loading ? <Spinner /> : '🔄'} 刷新
+            {loading ? <Spinner /> : <RefreshCw size={14} aria-hidden="true" />} 刷新
           </button>
           <button
             className="btn btn-danger"
@@ -176,7 +177,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
             disabled={resetting || session.read_only}
             title={session.read_only ? '只读模式' : '清空累计统计，便于观察之后的增量'}
           >
-            {resetting ? <Spinner /> : '🧹'} 重置统计
+            {resetting ? <Spinner /> : <RotateCcw size={14} aria-hidden="true" />} 重置统计
           </button>
         </div>
       </div>
@@ -197,9 +198,9 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
         </Alert>
       )}
 
-      {/* 汇总卡片 */}
+      {/* 汇总数据带 */}
       {t && (
-        <div className="grid grid-stats" style={{ marginBottom: 16 }}>
+        <section className="summary-strip" aria-label="请求统计摘要">
           <Stat
             label="总请求"
             value={fmtNum(t.requests)}
@@ -240,7 +241,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
               tone="warn"
             />
           )}
-        </div>
+        </section>
       )}
 
       {/* 官方价换算说明 */}
@@ -873,10 +874,10 @@ function Stat({
 }) {
   const cls = tone === 'ok' ? 'text-ok' : tone === 'warn' ? 'text-warn' : tone === 'danger' ? 'text-danger' : ''
   return (
-    <div className="stat">
-      <div className="stat-label">{label}</div>
-      <div className={`stat-value small ${cls}`}>{value}</div>
-      {sub && <div className="stat-sub">{sub}</div>}
+    <div className="summary-item">
+      <div className="summary-label">{label}</div>
+      <div className={`summary-value small ${cls}`}>{value}</div>
+      {sub && <div className="summary-sub">{sub}</div>}
     </div>
   )
 }

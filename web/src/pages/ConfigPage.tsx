@@ -1,3 +1,4 @@
+import { RefreshCw, Save, Undo2 } from 'lucide-react'
 // ConfigPage.tsx 网关 config.json 在线编辑：表单模式 + JSON 源码模式。
 //
 // 关键设计：表单读写的是**完整原始文档对象**（只改动已知字段），
@@ -196,7 +197,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => void load()} disabled={loading}>
-            {loading ? <Spinner /> : '🔄'} 重新读取
+            {loading ? <Spinner /> : <RefreshCw size={14} aria-hidden="true" />} 重新读取
           </button>
           {meta?.backup_path && (
             <button
@@ -205,7 +206,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
               disabled={writeDisabled || !session.dangerous_ops}
               title={!session.dangerous_ops ? '需在服务端开启 dangerous_ops' : '从首次备份恢复'}
             >
-              ↩️ 恢复备份
+              <Undo2 size={14} aria-hidden="true" /> 恢复备份
             </button>
           )}
         </div>
@@ -529,7 +530,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
 
           <div className="page-actions">
             <button className="btn btn-primary" onClick={() => void saveForm()} disabled={saving || writeDisabled}>
-              {saving ? <Spinner /> : '💾'} 保存配置
+              {saving ? <Spinner /> : <Save size={14} aria-hidden="true" />} 保存配置
             </button>
             <button className="btn" onClick={() => void load()} disabled={saving}>
               放弃修改
@@ -557,7 +558,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
           />
           <div className="page-actions" style={{ marginTop: 13 }}>
             <button className="btn btn-primary" onClick={() => void saveJSON()} disabled={saving || writeDisabled}>
-              {saving ? <Spinner /> : '💾'} 保存配置
+              {saving ? <Spinner /> : <Save size={14} aria-hidden="true" />} 保存配置
             </button>
             <button className="btn" onClick={() => setJsonText(JSON.stringify(doc ?? {}, null, 2))}>
               还原为已加载内容

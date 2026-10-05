@@ -1,6 +1,17 @@
 // App.tsx 应用外壳：登录门禁 + 侧边导航 + 路由。
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import {
+  BarChart3,
+  Bot,
+  CircleUserRound,
+  LayoutDashboard,
+  LogOut,
+  Settings2,
+  ShieldAlert,
+  UsersRound,
+  Wrench,
+} from 'lucide-react'
 import { api, setUnauthorizedHandler } from './api'
 import type { SessionInfo } from './types'
 import { Alert, Spinner } from './ui'
@@ -14,13 +25,13 @@ import ConfigPage from './pages/ConfigPage'
 import System from './pages/System'
 
 const NAV = [
-  { to: '/', label: '仪表盘', icon: '📊', end: true },
-  { to: '/accounts', label: '账号管理', icon: '👥' },
-  { to: '/stats', label: '请求统计', icon: '📈' },
-  { to: '/login', label: '添加账号', icon: '➕' },
-  { to: '/playground', label: '聊天测试', icon: '💬' },
-  { to: '/config', label: '网关配置', icon: '⚙️' },
-  { to: '/system', label: '系统', icon: '🔧' },
+  { to: '/', label: '仪表盘', icon: LayoutDashboard, end: true },
+  { to: '/accounts', label: '账号管理', icon: UsersRound },
+  { to: '/stats', label: '请求统计', icon: BarChart3 },
+  { to: '/login', label: '添加账号', icon: CircleUserRound },
+  { to: '/playground', label: '聊天测试', icon: Bot },
+  { to: '/config', label: '网关配置', icon: Settings2 },
+  { to: '/system', label: '系统', icon: Wrench },
 ]
 
 export default function App() {
@@ -105,29 +116,42 @@ function Shell({
           <div className="brand-dot">WB</div>
           <div className="brand-text">
             <strong>WorkBuddy 控制台</strong>
-            <span>workbuddy2api 网关</span>
+            <span>workbuddy2api gateway</span>
           </div>
         </div>
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            {item.label}
-          </NavLink>
-        ))}
+        <div className="nav-section">工作区</div>
+        {NAV.map((item) => {
+          const Icon = item.icon
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            >
+              <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+              {item.label}
+            </NavLink>
+          )
+        })}
         <div className="nav-spacer" />
         <div className="nav-foot">
-          <div style={{ marginBottom: 8, wordBreak: 'break-all' }}>网关：{session.gateway_url}</div>
-          <div style={{ marginBottom: 8 }}>
-            <span className="text-faint">登录身份：</span>
-            {session.username}
-            {session.read_only && <span className="badge badge-warn" style={{ marginLeft: 6 }}>只读</span>}
+          <div className="gateway-url">网关：{session.gateway_url}</div>
+          <div className="account-line">
+            <span>
+              <span style={{ color: '#8ca7ac' }}>身份：</span>
+              {session.username}
+            </span>
+            {session.read_only ? (
+              <span className="badge badge-warn">只读</span>
+            ) : session.dangerous_ops ? (
+              <span className="badge badge-warn">高危已解锁</span>
+            ) : (
+              <span className="badge badge-dim">受保护</span>
+            )}
           </div>
-          <button className="btn btn-sm" style={{ width: '100%' }} onClick={onLogout}>
+          <button className="btn btn-sm" onClick={onLogout}>
+            <LogOut size={13} aria-hidden="true" />
             退出登录
           </button>
         </div>
@@ -136,7 +160,10 @@ function Shell({
       <main className="main">
         {warnings.map((w) => (
           <Alert key={w} kind="warn">
-            {w}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <ShieldAlert size={15} aria-hidden="true" />
+              {w}
+            </span>
           </Alert>
         ))}
         <Routes>
