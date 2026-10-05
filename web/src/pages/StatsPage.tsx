@@ -462,7 +462,7 @@ export default function StatsPage({ session }: { session: SessionInfo }) {
                   </tr>
                   {expandedModel === m.model && (
                     <tr>
-                      <td colSpan={10} style={{ padding: 0, background: 'rgba(15, 17, 23, 0.45)' }}>
+                      <td colSpan={10} className="request-details-cell">
                         <RequestDetails
                           model={m.model}
                           rows={details[m.model]}
