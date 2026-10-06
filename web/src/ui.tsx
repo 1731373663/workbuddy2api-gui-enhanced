@@ -119,7 +119,7 @@ export function Alert({
   }[kind]
 
   return (
-    <div className={`alert alert-${kind}`}>
+    <div className={`alert alert-${kind} ios-alert`}>
       <span className="alert-icon">
         <Icon size={16} strokeWidth={1.9} aria-hidden="true" />
       </span>
@@ -194,7 +194,7 @@ export function Spinner({ label }: { label?: string }) {
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="empty">{children}</div>
+  return <div className="empty ios-empty">{children}</div>
 }
 
 /** ConfirmDialog 危险操作二次确认。 */

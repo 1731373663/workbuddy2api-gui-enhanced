@@ -139,9 +139,9 @@ export default function LoginWizard({
                   borderRadius: 20,
                   fontSize: 13,
                   border: '1px solid',
-                  borderColor: done ? 'rgba(63,185,80,.4)' : active ? 'rgba(79,140,255,.45)' : 'var(--border)',
-                  background: done ? 'rgba(63,185,80,.1)' : active ? 'rgba(79,140,255,.11)' : 'transparent',
-                  color: done ? '#7ee787' : active ? '#a8c8ff' : 'var(--text-faint)',
+                  borderColor: done ? 'rgba(52,199,89,.36)' : active ? 'rgba(0,122,255,.36)' : 'var(--ios-line)',
+                  background: done ? 'rgba(52,199,89,.14)' : active ? 'rgba(0,122,255,.13)' : 'rgba(118,118,128,.09)',
+                  color: done ? '#16863b' : active ? '#0066d6' : 'var(--ios-muted)',
                 }}
               >
                 <span>{done ? '✓' : i + 1}</span>

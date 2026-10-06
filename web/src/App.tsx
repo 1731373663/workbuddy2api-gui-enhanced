@@ -1,14 +1,14 @@
-// App.tsx 应用外壳：登录门禁 + 侧边导航 + 路由。
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
   Bot,
+  ChevronRight,
   CircleUserRound,
-  LayoutDashboard,
+  Gauge,
   LogOut,
-  Settings2,
   ShieldAlert,
+  SlidersHorizontal,
   UsersRound,
   Wrench,
 } from 'lucide-react'
@@ -25,13 +25,13 @@ import ConfigPage from './pages/ConfigPage'
 import System from './pages/System'
 
 const NAV = [
-  { to: '/', label: '仪表盘', icon: LayoutDashboard, end: true },
-  { to: '/accounts', label: '账号管理', icon: UsersRound },
-  { to: '/stats', label: '请求统计', icon: BarChart3 },
-  { to: '/login', label: '添加账号', icon: CircleUserRound },
-  { to: '/playground', label: '聊天测试', icon: Bot },
-  { to: '/config', label: '网关配置', icon: Settings2 },
-  { to: '/system', label: '系统', icon: Wrench },
+  { to: '/', label: '仪表盘', detail: '账号池概览', icon: Gauge, end: true },
+  { to: '/accounts', label: '账号', detail: '管理与批处理', icon: UsersRound },
+  { to: '/stats', label: '统计', detail: '请求与费用', icon: BarChart3 },
+  { to: '/login', label: '添加账号', detail: 'OAuth 登录', icon: CircleUserRound },
+  { to: '/playground', label: '聊天测试', detail: '接口验证', icon: Bot },
+  { to: '/config', label: '配置', detail: 'gateway.json', icon: SlidersHorizontal },
+  { to: '/system', label: '系统', detail: '容器与运行状态', icon: Wrench },
 ]
 
 export default function App() {
@@ -46,7 +46,6 @@ export default function App() {
       setSession(s)
       return s
     } catch {
-      // 会话接口失败（后端未起来）也要结束 loading，否则页面永久空白。
       setSession(null)
       return null
     } finally {
@@ -54,15 +53,12 @@ export default function App() {
     }
   }, [])
 
-  useEffect(() => {
-    void refreshSession()
-  }, [refreshSession])
+  useEffect(() => { void refreshSession() }, [refreshSession])
 
-  // 任何接口返回 401 时统一回到登录页，避免用户在坏会话里反复点。
   useEffect(() => {
     setUnauthorizedHandler(() => {
       setSession((prev) => (prev ? { ...prev, authenticated: false } : prev))
-      setBanner('会话已过期，请重新登录')
+      setBanner('登录状态已失效，请重新登录')
       navigate('/')
     })
   }, [navigate])
@@ -73,39 +69,21 @@ export default function App() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="login-wrap">
-        <Spinner label="正在连接服务…" />
-      </div>
-    )
+    return <div className="login-wrap"><Spinner label="正在连接服务…" /></div>
   }
 
   if (!session?.authenticated) {
     return <Login info={session} banner={banner} onCloseBanner={() => setBanner(null)} onSuccess={refreshSession} />
   }
 
-  return (
-    <Shell session={session} onLogout={handleLoggedOut} onSessionRefresh={refreshSession} />
-  )
+  return <Shell session={session} onLogout={handleLoggedOut} onSessionRefresh={refreshSession} />
 }
 
-function Shell({
-  session,
-  onLogout,
-  onSessionRefresh,
-}: {
-  session: SessionInfo
-  onLogout: () => void
-  onSessionRefresh: () => Promise<SessionInfo | null>
-}) {
+function Shell({ session, onLogout, onSessionRefresh }: { session: SessionInfo; onLogout: () => void; onSessionRefresh: () => Promise<SessionInfo | null> }) {
   const warnings = useMemo(() => {
     const list: string[] = []
-    if (session.using_default_password) {
-      list.push('面板正在使用默认口令（admin / workbuddy），建议在服务端配置中修改 ui.password')
-    }
-    if (session.read_only) {
-      list.push('服务端处于只读模式：登录、签到、改配置等写操作全部禁用')
-    }
+    if (session.using_default_password) list.push('当前仍使用默认口令，建议在服务端配置中更换。')
+    if (session.read_only) list.push('服务端已开启只读模式，写操作暂不可用。')
     return list
   }, [session])
 
@@ -115,57 +93,36 @@ function Shell({
         <div className="brand">
           <div className="brand-dot">WB</div>
           <div className="brand-text">
-            <strong>WorkBuddy 控制台</strong>
-            <span>workbuddy2api gateway</span>
+            <strong>WorkBuddy</strong>
+            <span>Gateway Console</span>
           </div>
         </div>
+
         <div className="nav-section">工作区</div>
         {NAV.map((item) => {
           const Icon = item.icon
           return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-            >
-              <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
-              {item.label}
+            <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+              <span className="nav-copy"><strong>{item.label}</strong><small>{item.detail}</small></span>
+              <ChevronRight className="nav-chevron" size={15} aria-hidden="true" />
             </NavLink>
           )
         })}
+
         <div className="nav-spacer" />
         <div className="nav-foot">
-          <div className="gateway-url">网关：{session.gateway_url}</div>
+          <div className="gateway-url">{session.gateway_url}</div>
           <div className="account-line">
-            <span>
-              <span style={{ color: '#8ca7ac' }}>身份：</span>
-              {session.username}
-            </span>
-            {session.read_only ? (
-              <span className="badge badge-warn">只读</span>
-            ) : session.dangerous_ops ? (
-              <span className="badge badge-warn">高危已解锁</span>
-            ) : (
-              <span className="badge badge-dim">受保护</span>
-            )}
+            <span>{session.username || 'admin'}</span>
+            {session.read_only ? <span className="badge badge-warn">只读</span> : session.dangerous_ops ? <span className="badge badge-warn">高危已解锁</span> : <span className="badge badge-dim">受保护</span>}
           </div>
-          <button className="btn btn-sm" onClick={onLogout}>
-            <LogOut size={13} aria-hidden="true" />
-            退出登录
-          </button>
+          <button className="btn btn-sm" onClick={onLogout}><LogOut size={14} aria-hidden="true" />退出登录</button>
         </div>
       </aside>
 
       <main className="main">
-        {warnings.map((w) => (
-          <Alert key={w} kind="warn">
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <ShieldAlert size={15} aria-hidden="true" />
-              {w}
-            </span>
-          </Alert>
-        ))}
+        {warnings.map((w) => <Alert key={w} kind="warn"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldAlert size={16} aria-hidden="true" />{w}</span></Alert>)}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/accounts" element={<Accounts session={session} />} />

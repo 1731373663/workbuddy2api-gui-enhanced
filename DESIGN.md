@@ -2,82 +2,81 @@
 
 ## Direction
 
-**Operations ledger.** The interface reads like a calm service desk: a compact slate
-navigation rail, pale paper work surfaces, ruled data regions, and a cyan signal color
-that marks action and live state. It is deliberately not a terminal costume, not a
-card catalog, and not a black dashboard with neon accents.
+**Quiet glass control center.** A bright iOS-inspired operations console: a soft
+system-gray canvas, white grouped panels, translucent toolbar materials, generous
+but disciplined radii, Apple-like system colors, and one continuous bottom action
+surface on mobile. It preserves the density and utility of the existing gateway
+console while replacing the previous operations-ledger look completely.
 
 ## Palette
 
-- `--canvas: #eef1f2` cool paper background
-- `--surface: #f9faf8` primary work surface
-- `--surface-raised: #ffffff` focused panels and overlays
-- `--ink: #172126` primary text
-- `--muted: #66757b` secondary text
-- `--line: #d7dedf` structural rule
-- `--rail: #15333b` navigation rail and high-trust context
-- `--signal: #087f8c` action, current state, focus
-- `--signal-soft: #d9f0f0` selected and highlighted states
-- `--ok: #23865f` healthy state
-- `--warn: #b56b16` degraded or attention state
-- `--danger: #c44545` failure and destructive state
-- `--info: #4669a8` neutral information
+- `--ios-canvas: #f2f2f7` grouped background
+- `--ios-surface: #ffffff` cards, sheets, and grouped rows
+- `--ios-surface-2: #f7f7fa` inset controls and secondary panels
+- `--ios-ink: #1c1c1e` primary label
+- `--ios-ink-2: #3a3a3c` secondary label
+- `--ios-muted: #8e8e93` tertiary label
+- `--ios-line: rgba(60, 60, 67, 0.16)` separators
+- `--ios-blue: #007aff` primary action and selection
+- `--ios-green: #34c759` healthy
+- `--ios-orange: #ff9500` attention
+- `--ios-red: #ff3b30` destructive and failure
+- `--ios-teal: #30b0c7` informational accent
 
-State colors are semantic only. The signal color is not used as decoration.
+State colors are semantic. Materials use translucent white and system blur only for
+navigation, toolbars, sheets, and floating action surfaces.
 
 ## Type
 
-Use one legible sans family stack for all UI: `"IBM Plex Sans", "Segoe UI", "Microsoft YaHei", sans-serif`.
-Use `"IBM Plex Mono", "Cascadia Code", Consolas, monospace` only for identifiers,
-code, and tabular measurements. The scale is compact: 12, 13, 14, 16, 20, and 28px.
-Headings use weight and spacing rather than oversized display type.
+Use the platform system UI stack, led by `-apple-system` and `SF Pro` where available,
+then `Segoe UI`, `PingFang SC`, and `Microsoft YaHei`. The scale is compact and
+hierarchical: 11, 13, 15, 17, 22, 34px. Display headings use 34px large-title
+semantics on desktop and 28px on mobile. Numeric data uses tabular figures.
 
 ## Layout
 
-Desktop uses a fixed 234px left rail and a fluid work area. The top of each page is a
-context bar with title, current status, and page actions; it is not a decorative hero.
-Content uses full-width ruled sections, tables, split work panes, and form grids.
-Primary content is left aligned. Tables may scroll horizontally on small screens.
+Desktop keeps a persistent left navigation column, but it becomes a light translucent
+surface rather than a dark rail. Content is a centered, wide grouped canvas with
+large titles, rounded grouped panels, inset rows, and sheets that rise from the
+bottom or right. Primary information remains left-aligned and scan-friendly.
 
 ```text
-+--------------+----------------------------------------------+
-| product mark | page title            status        actions |
-+--------------+----------------------------------------------+
-| primary nav  | summary strip / alerts when needed           |
-|              |                                              |
-| status       | primary data region                          |
-| account      |                                              |
-|              | supporting detail                            |
-+--------------+----------------------------------------------+
++------------------+-----------------------------------------------+
+| account / brand  | large title                    toolbar actions |
+| navigation       |                                               |
+|                  | grouped panel                                 |
+|                  | inset rows / tables / charts                  |
+| status           | grouped panel                                 |
++------------------+-----------------------------------------------+
 ```
 
-Mobile turns the rail into a compact horizontal control strip, keeps page actions
-sticky below it, and converts wide tables into scroll regions. No element may overlap
-or push the primary action outside its container.
+Mobile moves navigation into a translucent top strip and uses a floating bottom action
+surface for primary actions. Sheets and alerts cover the viewport with one clear
+dismiss affordance.
 
 ## Components
 
-- Buttons use a 6px radius, one icon vocabulary, and clear default, hover, focus,
-  active, disabled, and loading states.
-- Cards are reserved for individual repeated items, modals, or genuinely framed tools.
-  Different page sections are unframed bands separated by rules and spacing.
-- Tables are first-class: sticky headers, zebra-free ruled rows, tabular numerals,
-  clear selected and hover states.
-- Badges use a dot plus concise label. They do not substitute for explanatory state text.
-- Inputs use a visible label, a 1px rule, and a cyan focus ring.
-- Modals are compact; a right-side drawer is used for request-log detail.
-- Alerts are inline, specific, and dismissible when transient. No left accent bars.
+- Buttons use filled system-blue, tinted, bordered, or plain variants with 10-14px
+  radii and 44px minimum touch height on mobile.
+- Panels are grouped surfaces with one outer radius and inset separators; cards are
+  not nested inside cards.
+- Tables become inset grouped lists: no heavy header plates, stronger row rhythm,
+  and readable text before hover.
+- Badges use compact rounded labels with system semantic colors.
+- Inputs use inset grouped fields, a 1px separator, and a blue focus ring.
+- Sheets use a top grabber, large title, and bottom toolbar. The request log uses a
+  right-side sheet on desktop and full-screen sheet on mobile.
+- Alerts use filled system tints with a clear icon and close affordance.
 
 ## Motion
 
-Motion is limited to 160-220ms state feedback and one drawer transition. No page-load
-choreography, no reveal-on-scroll, and no decorative looping animation. Reduced-motion
-preferences remove transforms and transitions.
+Use 180-240ms spring-like easing for sheets, selection, and state transitions. Respect
+reduced motion. Avoid decorative page-load choreography.
 
 ## Principles
 
-1. The table is the interface; keep rows scannable at normal desktop distance.
-2. One persistent action color makes primary controls easy to locate.
-3. Failure states explain what happened, what is stale, and what the administrator can do.
-4. Destructive actions are visually quiet until confirmed.
-5. Every dense desktop layout has a mobile reading order, not merely a narrower canvas.
+1. Calm materials carry the hierarchy; color is reserved for meaning.
+2. Familiar iOS controls make dense operations feel immediately learnable.
+3. Large titles orient the user before data begins.
+4. Grouped rows keep scanning fast without losing the product's density.
+5. Every destructive or write action has a clear state before it is confirmed.
