@@ -100,12 +100,12 @@ export default function LoginWizard({
 
   return (
     <>
-      <div className="page-head">
+      <div className="ios-page-title">
         <div>
           <h1>添加账号</h1>
           <p>通过 WorkBuddy OAuth 设备授权登录（支持国内版 / 国际版），把账号加入账号池</p>
         </div>
-        <div className="page-actions">
+        <div className="ios-toolbar">
           <Link className="btn" to="/accounts">
              返回账号管理
           </Link>
@@ -120,8 +120,8 @@ export default function LoginWizard({
       )}
 
       {/* 步骤指示 */}
-      <div className="card">
-        <div className="card-head">
+      <div className="ios-group">
+        <div className="ios-group-head">
           <h2>登录进度</h2>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -154,8 +154,8 @@ export default function LoginWizard({
 
       {/* 第一步：发起授权 */}
       {!sess && (
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>第 1 步 · 发起设备授权</h2>
           </div>
           <div className="field">
@@ -192,8 +192,8 @@ export default function LoginWizard({
 
       {/* 第二步：浏览器登录 */}
       {sess && sess.status === 'pending' && (
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>第 2 步 · 在浏览器中完成登录</h2>
             <Spinner label="等待授权中…" />
           </div>
@@ -203,7 +203,7 @@ export default function LoginWizard({
           <div className="url-box" style={{ marginBottom: 11 }}>
             {sess.auth_url}
           </div>
-          <div className="page-actions">
+          <div className="ios-toolbar">
             <a className="btn btn-primary" href={sess.auth_url} target="_blank" rel="noopener noreferrer">
               <ExternalLink size={14} aria-hidden="true" /> 打开授权页面
             </a>
@@ -226,8 +226,8 @@ export default function LoginWizard({
 
       {/* 第三步：完成 */}
       {sess && sess.status === 'success' && (
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>第 3 步 · 保存凭证</h2>
           </div>
           <Alert kind="ok">
@@ -265,8 +265,8 @@ export default function LoginWizard({
 
       {/* 失败 / 过期 / 取消 */}
       {sess && (sess.status === 'error' || sess.status === 'expired' || sess.status === 'cancelled') && (
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>登录未完成</h2>
           </div>
           <Alert kind={sess.status === 'cancelled' ? 'info' : 'error'}>
@@ -295,8 +295,8 @@ export default function LoginWizard({
         </div>
       )}
 
-      <div className="card">
-        <div className="card-head">
+      <div className="ios-group">
+        <div className="ios-group-head">
           <h2>其他添加方式</h2>
         </div>
         <p className="text-dim" style={{ marginTop: 0, fontSize: 13 }}>

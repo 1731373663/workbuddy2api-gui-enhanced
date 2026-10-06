@@ -195,12 +195,12 @@ export default function Playground() {
 
   return (
     <>
-      <div className="page-head">
+      <div className="ios-page-title">
         <div>
           <h1>聊天测试</h1>
           <p>直接调用网关的 OpenAI 兼容接口，验证账号轮转、流式输出与推理内容</p>
         </div>
-        <div className="page-actions">
+        <div className="ios-toolbar">
           <button className="btn" onClick={() => void loadModels()}>
             <RefreshCw size={14} aria-hidden="true" /> 刷新模型列表
           </button>
@@ -217,8 +217,8 @@ export default function Playground() {
       )}
 
       <div className="grid grid-2" style={{ alignItems: 'start' }}>
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>会话设置</h2>
             {currentModel && (
               <span className="hint">
@@ -277,8 +277,8 @@ export default function Playground() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>对话</h2>
             {busy && <Spinner label={stream ? '接收中…' : '请求中…'} />}
           </div>

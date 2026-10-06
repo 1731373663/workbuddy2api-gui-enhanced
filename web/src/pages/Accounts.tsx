@@ -21,7 +21,6 @@ import {
   ConfirmDialog,
   coolKindText,
   displayName,
-  Empty,
   fmtDuration,
   fmtISO,
   fmtNum,
@@ -186,308 +185,65 @@ export default function Accounts({ session }: { session: SessionInfo }) {
   const writeDisabled = session.read_only
 
   return (
-    <>
-      <div className="page-head">
-        <div>
-          <h1>账号管理</h1>
-          <p>
-            共 {accounts.length} 个账号
-            {selected.size > 0 && <span className="text-accent"> · 已选 {selected.size} 个</span>}
-          </p>
+    <div className="ios-page">
+      <header className="ios-page-title">
+        <div><h1>账号</h1><p>{accounts.length} 个账号 · {accounts.filter((a) => a.status === 'healthy').length} 个可用</p></div>
+        <div className="ios-toolbar">
+          <button className="btn" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? 'spin-icon' : undefined} />刷新</button>
+          <button className="btn" onClick={() => setShowImport(true)} disabled={writeDisabled}><FileDown size={16} />导入</button>
+          <Link className="btn btn-primary" to="/login"><Plus size={16} />添加</Link>
         </div>
-        <div className="page-actions">
-          <button className="btn" onClick={() => void load()} disabled={loading}>
-            <RefreshCw size={14} className={loading ? 'spin-icon' : undefined} aria-hidden="true" />
-            刷新
-          </button>
-          <button className="btn" onClick={() => setShowImport(true)} disabled={writeDisabled} title={writeDisabled ? '只读模式' : ''}>
-            <FileDown size={14} aria-hidden="true" />
-            导入凭证
-          </button>
-          <Link className="btn btn-primary" to="/login">
-            <Plus size={14} aria-hidden="true" />
-            添加账号
-          </Link>
-        </div>
-      </div>
-
-      {writeDisabled && <Alert kind="warn">服务端已开启只读模式，签到 / 刷新 / 删除等写操作已禁用。</Alert>}
-      {notice && (
-        <Alert kind={notice.kind} onClose={() => setNotice(null)}>
-          {notice.text}
-        </Alert>
-      )}
+      </header>
+      {writeDisabled && <Alert kind="warn">服务端已开启只读模式，写操作暂不可用。</Alert>}
+      {notice && <Alert kind={notice.kind} onClose={() => setNotice(null)}>{notice.text}</Alert>}
       {error && <Alert kind="error">{error}</Alert>}
-      {!gatewayOK && (
-        <Alert kind="warn">
-          网关当前不可达{gatewayError ? `：${gatewayError}` : ''}。账号状态显示的是磁盘凭证信息，运行态为未知。
-        </Alert>
-      )}
-      {fileIssues.length > 0 && (
-        <Alert kind="warn">
-          <strong>凭证目录存在无法解析的文件：</strong>
-          <ul style={{ margin: '5px 0 0', paddingLeft: 18 }}>
-            {fileIssues.map((i) => (
-              <li key={i} className="mono" style={{ fontSize: 12 }}>
-                {i}
-              </li>
-            ))}
-          </ul>
-        </Alert>
-      )}
-
-      <section className="card">
-        <div className="card-head">
-          <h2>批量操作</h2>
-          <span className="hint">
-            {selected.size > 0 ? `作用于已选 ${selected.size} 个账号` : '未选择时作用于全部账号'}
-          </span>
-        </div>
-        <div className="page-actions">
-          <button className="btn" onClick={() => void runBatch('checkin')} disabled={writeDisabled || accounts.length === 0}>
-            <CheckCircle2 size={14} aria-hidden="true" />
-            批量签到
-          </button>
-          <button className="btn" onClick={() => void runBatch('refresh')} disabled={writeDisabled || accounts.length === 0}>
-            <KeyRound size={14} aria-hidden="true" />
-            批量刷新 Token
-          </button>
-          <button className="btn" onClick={() => void runBatch('travel')} disabled={writeDisabled || accounts.length === 0}>
-            <Sparkles size={14} aria-hidden="true" />
-            批量猫猫旅行
-          </button>
-          <button className="btn" onClick={() => void runBatch('credits')} disabled={accounts.length === 0}>
-            <BadgeDollarSign size={14} aria-hidden="true" />
-            批量查积分
-          </button>
-          {selected.size > 0 && (
-            <button className="btn btn-ghost" onClick={() => setSelected(new Set())}>
-              清除选择
-            </button>
-          )}
-        </div>
-        <div className="desc" style={{ marginTop: 11 }}>
-          批量任务在后台串行执行（账号间限速，避免触发上游风控），可随时关闭进度窗口，任务会继续跑完。
-        </div>
+      {!gatewayOK && <Alert kind="warn">网关当前不可达{gatewayError ? `：${gatewayError}` : ''}，运行态数据可能不是最新的。</Alert>}
+      {fileIssues.length > 0 && <Alert kind="warn">凭证目录存在无法解析的文件：{fileIssues.join('、')}</Alert>}
+      <section className="ios-group"><div className="ios-group-title">账号概览</div><div className="ios-grid-metrics">
+        <Metric label="可用" value={String(accounts.filter((a) => a.status === 'healthy').length)} detail="正常状态" />
+        <Metric label="需处理" value={String(accounts.filter((a) => a.status !== 'healthy').length)} detail="冷却 / 禁用 / 过期" tone="warn" />
+        <Metric label="已选择" value={String(selected.size)} detail={selected.size > 0 ? '批量操作作用于所选' : '未选择时作用于全部'} />
+        <Metric label="结果" value={String(filtered.length)} detail={`筛选后 · 共 ${accounts.length}`} />
+      </div></section>
+      <section className="ios-group"><div className="ios-group-head"><h2>批量操作</h2><span>{selected.size > 0 ? `已选 ${selected.size} 个` : '全部账号'}</span></div>
+        <div className="ios-action-grid">
+          <ActionButton icon={<CheckCircle2 size={20} />} label="批量签到" disabled={writeDisabled || accounts.length === 0} onClick={() => void runBatch('checkin')} />
+          <ActionButton icon={<KeyRound size={20} />} label="刷新 Token" disabled={writeDisabled || accounts.length === 0} onClick={() => void runBatch('refresh')} />
+          <ActionButton icon={<Sparkles size={20} />} label="猫猫旅行" disabled={writeDisabled || accounts.length === 0} onClick={() => void runBatch('travel')} />
+          <ActionButton icon={<BadgeDollarSign size={20} />} label="查询积分" disabled={accounts.length === 0} onClick={() => void runBatch('credits')} />
+        </div>{selected.size > 0 && <button className="ios-clear-selection" onClick={() => setSelected(new Set())}>清除选择</button>}
       </section>
-
-      <section className="card">
-        <div className="card-head">
-          <h2>账号列表</h2>
-          <span className="hint">显示 {filtered.length} / {accounts.length} 个账号</span>
-        </div>
-        <div className="filter-bar" style={{ marginBottom: 14 }}>
-          <div className="filter-search">
-            <Search size={14} aria-hidden="true" />
-            <input
-              type="text"
-              placeholder="搜索 uid / 昵称…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
-            <option value="all">全部状态</option>
-            <option value="healthy">仅正常</option>
-            <option value="cooling">仅冷却中</option>
-            <option value="problem">仅异常</option>
-            <option value="expiring">Token 需刷新</option>
-          </select>
-        </div>
-
-        {loading && accounts.length === 0 ? (
-          <Spinner label="加载中…" />
-        ) : filtered.length === 0 ? (
-          <Empty>
-            {accounts.length === 0 ? (
-              <>
-                <UsersRound size={22} aria-hidden="true" />
-                还没有任何账号。
-                <div style={{ marginTop: 10 }}>
-                  <Link className="btn btn-primary btn-sm" to="/login">
-                    <Plus size={13} aria-hidden="true" />
-                    添加第一个账号
-                  </Link>
-                </div>
-              </>
-            ) : (
-              '没有符合筛选条件的账号'
-            )}
-          </Empty>
-        ) : (
-          <div className="table-wrap">
-            <table className="account-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 34 }}>
-                    <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="全选" />
-                  </th>
-                  <th>账号</th>
-                  <th>状态</th>
-                  <th className="num">积分</th>
-                  <th className="num">成功 / 失败</th>
-                  <th>Token 有效期</th>
-                  <th>最近活动</th>
-                  <th style={{ minWidth: 210 }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((a) => {
-                  const b = statusBadge(a.status)
-                  const busy = busyUid === a.uid
-                  return (
-                    <tr key={a.uid} className={selected.has(a.uid) ? 'is-selected' : undefined}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(a.uid)}
-                          onChange={() => toggleOne(a.uid)}
-                          aria-label={`选择 ${a.uid}`}
-                        />
-                      </td>
-                      <td>
-                        <button className="account-name" onClick={() => setDetailUid(a.uid)} title="查看详情">
-                          {displayName(a)}
-                        </button>
-                        <div className="row-caption">
-                          {a.uid.slice(0, 8)}
-                          {a.in_gateway && a.in_flight > 0 && (
-                            <span className="text-accent"> · 在途 {a.in_flight}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <Badge cls={b.cls}>{b.text}</Badge>
-                        {a.cooling && (
-                          <div className="row-caption">
-                            {coolKindText(a.cool_kind)} · 剩 {fmtDuration(a.cool_remaining_sec)}
-                          </div>
-                        )}
-                        {a.disabled && a.reason && <div className="row-caption">{a.reason}</div>}
-                        {a.status === 'token_expired' && <div className="row-caption">需刷新或重新登录</div>}
-                      </td>
-                      <td className="num">{fmtNum(a.live_credits ?? a.credits)}</td>
-                      <td className="num text-dim" style={{ fontSize: 12 }}>
-                        {fmtNum(a.success_count)} / {a.err_total > 0 ? <span className="text-warn">{a.err_total}</span> : '0'}
-                      </td>
-                      <td style={{ fontSize: 12 }}>
-                        {a.expired ? (
-                          <span className="text-danger">已过期</span>
-                        ) : a.needs_refresh ? (
-                          <span className="text-warn">即将过期</span>
-                        ) : (
-                          <span className="text-ok">有效</span>
-                        )}
-                        <div className="row-caption">{fmtTime(a.expires_at)}</div>
-                      </td>
-                      <td style={{ fontSize: 12 }} className="text-dim">
-                        {fmtISO(a.last_success || a.last_err)}
-                      </td>
-                      <td>
-                        <div className="page-actions" style={{ gap: 5, justifyContent: 'flex-start' }}>
-                          <button
-                            className="btn btn-sm"
-                            disabled={busy || writeDisabled}
-                            onClick={() => void runSingle(a, 'checkin')}
-                            title="签到并刷新余额"
-                          >
-                            签到
-                          </button>
-                          <button
-                            className="btn btn-sm"
-                            disabled={busy || writeDisabled}
-                            onClick={() => void runSingle(a, 'refresh')}
-                            title="刷新 access token"
-                          >
-                            刷新
-                          </button>
-                          <button
-                            className="btn btn-sm"
-                            disabled={busy || writeDisabled}
-                            onClick={() => void runSingle(a, 'travel')}
-                            title="推进一趟猫猫旅行"
-                          >
-                            猫猫
-                          </button>
-                          <button className="btn btn-sm" disabled={busy} onClick={() => void runSingle(a, 'credits')} title="查询余额">
-                            积分
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            disabled={busy || session.read_only || !session.dangerous_ops || !a.has_file}
-                            onClick={() => setDeleteTarget(a)}
-                            title={
-                              !a.has_file
-                                ? '该账号在网关池中但没有本地凭证文件，无法删除'
-                                : !session.dangerous_ops
-                                  ? '需在服务端开启 dangerous_ops 才能删除账号'
-                                  : session.read_only
-                                    ? '只读模式'
-                                    : '删除该账号凭证文件'
-                            }
-                          >
-                            <Trash2 size={12} aria-hidden="true" />
-                            删除
-                          </button>
-                          {busy && <Spinner />}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <section className="ios-group">
+        <div className="ios-group-head"><h2>账号列表</h2><button className="ios-text-button" onClick={toggleAll}>{allSelected ? '取消全选' : '全选筛选结果'}</button></div>
+        <div className="ios-search-row"><div className="filter-search"><Search size={16} aria-hidden="true" /><input type="text" placeholder="搜索 uid 或昵称" value={query} onChange={(e) => setQuery(e.target.value)} /></div></div>
+        <div className="ios-segmented">{([['all', '全部'], ['healthy', '正常'], ['cooling', '冷却'], ['problem', '异常'], ['expiring', '待刷新']] as [Filter, string][]).map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div>
+        {loading && accounts.length === 0 ? <div className="ios-empty-row"><Spinner label="加载中…" /></div> : filtered.length === 0 ? <div className="ios-empty-row"><UsersRound size={20} aria-hidden="true" />{accounts.length === 0 ? '还没有账号' : '没有符合筛选条件的账号'}{accounts.length === 0 && <Link className="btn btn-primary btn-sm" to="/login">添加账号</Link>}</div> : <div className="ios-account-list">
+          {filtered.map((a) => { const b = statusBadge(a.status); const busy = busyUid === a.uid; const isSelected = selected.has(a.uid); return <article className={`ios-account-row ${isSelected ? 'selected' : ''}`} key={a.uid}>
+            <div className="ios-account-select"><input type="checkbox" checked={isSelected} onChange={() => toggleOne(a.uid)} aria-label={`选择 ${a.uid}`} /></div>
+            <button className="ios-account-identity" onClick={() => setDetailUid(a.uid)}><strong>{displayName(a)}</strong><span>{a.uid.slice(0, 8)}{a.in_gateway && a.in_flight > 0 ? ` · 在途 ${a.in_flight}` : ''}</span></button>
+            <div className="ios-account-status"><Badge cls={b.cls}>{b.text}</Badge>{a.cooling && <small>{coolKindText(a.cool_kind)} · {fmtDuration(a.cool_remaining_sec)}</small>}{a.disabled && a.reason && <small>{a.reason}</small>}</div>
+            <div className="ios-account-balance"><strong>{fmtNum(a.live_credits ?? a.credits)}</strong><small>积分</small></div>
+            <div className="ios-account-actions"><QuickButton label="签到" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'checkin')} /><QuickButton label="刷新" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'refresh')} /><QuickButton label="猫猫" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'travel')} /><QuickButton label="积分" busy={busy} disabled={busy} onClick={() => void runSingle(a, 'credits')} /><button className="ios-danger-button" disabled={busy || writeDisabled || !session.dangerous_ops || !a.has_file} onClick={() => setDeleteTarget(a)} title="删除账号凭证"><Trash2 size={15} /></button></div>
+          </article> })}
+        </div>}
       </section>
-
       {detailUid && <AccountDetail uid={detailUid} onClose={() => setDetailUid(null)} />}
-
-      {taskId && (
-        <TaskProgress
-          taskId={taskId}
-          onClose={() => setTaskId(null)}
-          onFinished={() => void load(true)}
-        />
-      )}
-
-      {showImport && (
-        <ImportDialog
-          onClose={() => setShowImport(false)}
-          onDone={(msg) => {
-            setShowImport(false)
-            setNotice({ kind: 'ok', text: msg })
-            void load(true)
-          }}
-          onError={(msg) => setNotice({ kind: 'error', text: msg })}
-        />
-      )}
-
-      {deleteTarget && (
-        <ConfirmDialog
-          title="删除账号凭证"
-          danger
-          confirmText="确认删除"
-          busy={deleting}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={() => void doDelete()}
-          message={
-            <>
-              <p style={{ marginTop: 0 }}>
-                即将删除账号 <strong>{displayName(deleteTarget)}</strong>
-                <span className="mono text-faint"> ({deleteTarget.uid.slice(0, 8)})</span> 的凭证文件
-                <span className="mono"> {deleteTarget.file_name}</span>。
-              </p>
-              <p>
-                该操作<strong className="text-danger">不可从上游恢复</strong>：删除后需要重新走 OAuth 登录才能找回该账号。
-                网关需重启后才会把它移出账号池。
-              </p>
-            </>
-          }
-        />
-      )}
-    </>
+      {taskId && <TaskProgress taskId={taskId} onClose={() => setTaskId(null)} onFinished={() => void load(true)} />}
+      {showImport && <ImportDialog onClose={() => setShowImport(false)} onDone={(msg) => { setShowImport(false); setNotice({ kind: 'ok', text: msg }); void load(true) }} onError={(msg) => setNotice({ kind: 'error', text: msg })} />}
+      {deleteTarget && <ConfirmDialog title="删除账号凭证" danger confirmText="确认删除" busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void doDelete()} message={<><p style={{ marginTop: 0 }}>即将删除账号 <strong>{displayName(deleteTarget)}</strong> 的凭证文件。</p><p>该操作不可从上游恢复，需要重新登录才能找回账号。</p></>} />}
+    </div>
   )
+}
+
+function Metric({ label, value, detail, tone }: { label: string; value: string; detail: string; tone?: 'ok' | 'warn' | 'danger' }) {
+  const cls = tone === 'ok' ? 'text-ok' : tone === 'warn' ? 'text-warn' : tone === 'danger' ? 'text-danger' : ''
+  return <div className="ios-metric"><span>{label}</span><strong className={cls}>{value}</strong><small>{detail}</small></div>
+}
+function ActionButton({ icon, label, disabled, onClick }: { icon: React.ReactNode; label: string; disabled: boolean; onClick: () => void }) {
+  return <button className="ios-action-button" disabled={disabled} onClick={onClick}>{icon}<span>{label}</span></button>
+}
+function QuickButton({ label, busy, disabled, onClick }: { label: string; busy: boolean; disabled: boolean; onClick: () => void }) {
+  return <button className="ios-quick-button" disabled={disabled} onClick={onClick}>{busy ? <Spinner /> : label}</button>
 }
 
 /** AccountDetail 账号详情弹窗：实时积分、猫档案、冷却/熔断细节。 */

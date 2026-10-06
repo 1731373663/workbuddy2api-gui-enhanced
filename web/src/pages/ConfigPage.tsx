@@ -187,7 +187,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
 
   return (
     <>
-      <div className="page-head">
+      <div className="ios-page-title">
         <div>
           <h1>网关配置</h1>
           <p>
@@ -195,7 +195,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             {meta?.mod_time && <span className="text-faint"> · 最后修改 {fmtISO(meta.mod_time)}</span>}
           </p>
         </div>
-        <div className="page-actions">
+        <div className="ios-toolbar">
           <button className="btn" onClick={() => void load()} disabled={loading}>
             {loading ? <Spinner /> : <RefreshCw size={14} aria-hidden="true" />} 重新读取
           </button>
@@ -252,7 +252,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
         )}
       </Alert>
 
-      <div className="tabs">
+      <div className="ios-segmented ios-config-tabs">
         <button className={`tab ${tab === 'form' ? 'active' : ''}`} onClick={() => setTab('form')}>
           表单编辑
         </button>
@@ -263,8 +263,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
 
       {tab === 'form' && doc && (
         <>
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>基础设置</h2>
             </div>
             <div className="row">
@@ -304,8 +304,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>定时任务</h2>
               <span className="hint">时间按容器时区（compose 默认 Asia/Shanghai）</span>
             </div>
@@ -356,8 +356,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>账号池与冷却</h2>
             </div>
             <div className="row">
@@ -425,8 +425,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>上游超时</h2>
             </div>
             <div className="row">
@@ -463,8 +463,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>会话粘性与功能开关</h2>
             </div>
             <div className="row">
@@ -506,8 +506,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
               <h2>Redis 镜像（可选）</h2>
               <span className="hint">留空 = 纯内存模式，功能照常</span>
             </div>
@@ -528,7 +528,7 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          <div className="page-actions">
+          <div className="ios-toolbar">
             <button className="btn btn-primary" onClick={() => void saveForm()} disabled={saving || writeDisabled}>
               {saving ? <Spinner /> : <Save size={14} aria-hidden="true" />} 保存配置
             </button>
@@ -540,8 +540,8 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
       )}
 
       {tab === 'json' && (
-        <div className="card">
-          <div className="card-head">
+        <div className="ios-group">
+          <div className="ios-group-head">
             <h2>JSON 源码</h2>
             <span className="hint">适合编辑表单未覆盖的自定义字段</span>
           </div>
