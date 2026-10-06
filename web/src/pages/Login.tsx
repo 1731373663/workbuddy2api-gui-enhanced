@@ -3,18 +3,22 @@ import { useState } from 'react'
 import { LockKeyhole } from 'lucide-react'
 import { api, ApiError } from '../api'
 import type { SessionInfo } from '../types'
-import { Alert, Spinner } from '../ui'
+import { Alert, Spinner, ThemePicker, type ThemePreference } from '../ui'
 
 export default function Login({
   info,
   banner,
   onCloseBanner,
   onSuccess,
+  theme,
+  onThemeChange,
 }: {
   info: SessionInfo | null
   banner: string | null
   onCloseBanner: () => void
   onSuccess: () => Promise<SessionInfo | null>
+  theme: ThemePreference
+  onThemeChange: (value: ThemePreference) => void
 }) {
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
@@ -37,6 +41,7 @@ export default function Login({
 
   return (
     <div className="login-wrap">
+      <ThemePicker className="apple-theme-login" value={theme} onChange={onThemeChange} />
       <div className="login-card">
         <div className="login-logo">
           <LockKeyhole size={19} strokeWidth={1.8} aria-hidden="true" />

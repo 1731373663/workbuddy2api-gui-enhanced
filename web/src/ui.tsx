@@ -19,6 +19,34 @@ export function Modal({ title, onClose, children, wide, className, footer }: { t
   const up = () => { const d = ref.current; if (!d) return; const projected = dragY + d.velocity * 260; ref.current = null; if (projected > 120) { setDragY(0); onClose() } else setDragY(0) }
   return <div className="modal-backdrop apple-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}><div className={`modal apple-sheet ${wide ? 'modal-wide' : ''} ${className || ''}`} role="dialog" aria-modal="true" style={{ transform: dragY ? `translateY(${dragY}px) scale(${1 - Math.min(.04, dragY / 4000)})` : undefined }}><button className="apple-sheet-grabber" aria-label="拖动关闭" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} /><div className="modal-head"><h2>{title}</h2><button className="btn btn-ghost btn-sm btn-icon" onClick={onClose} aria-label="关闭"><X size={15} /></button></div>{children}{footer && <div className="modal-foot">{footer}</div>}</div></div>
 }
+export type ThemePreference = 'system' | 'light' | 'dark'
+
+/** Apply a theme preference to the document root and persist it locally. */
+export function setThemePreference(preference: ThemePreference) {
+  const root = document.documentElement
+  if (preference === 'system') root.removeAttribute('data-theme')
+  else root.setAttribute('data-theme', preference)
+  try { localStorage.setItem('wbgui-theme', preference) } catch { /* private mode */ }
+}
+
+export function readThemePreference(): ThemePreference {
+  try {
+    const saved = localStorage.getItem('wbgui-theme')
+    if (saved === 'light' || saved === 'dark' || saved === 'system') return saved
+  } catch { /* private mode */ }
+  return 'system'
+}
+
+export function ThemePicker({ value, onChange, className }: { value: ThemePreference; onChange: (value: ThemePreference) => void; className?: string }) {
+  const options: { value: ThemePreference; label: string; icon: string }[] = [
+    { value: 'system', label: '跟随系统', icon: '◐' },
+    { value: 'light', label: '浅色', icon: '☀' },
+    { value: 'dark', label: '深色', icon: '☾' },
+  ]
+  return <div className={`apple-theme-picker ${className || ''}`} role="radiogroup" aria-label="外观">
+    {options.map((option) => <button type="button" key={option.value} role="radio" aria-checked={value === option.value} className={value === option.value ? 'active' : ''} onClick={() => onChange(option.value)} title={option.label}><span aria-hidden="true">{option.icon}</span><span>{option.label}</span></button>)}
+  </div>
+}
 export function Spinner({ label }: { label?: string }) { return <span className="apple-spinner-wrap"><span className="spinner" />{label && <span className="text-dim">{label}</span>}</span> }
 export function Empty({ children }: { children: React.ReactNode }) { return <div className="empty apple-empty">{children}</div> }
 export function ConfirmDialog({ title, message, confirmText = '确认', danger, onConfirm, onCancel, busy }: { title: string; message: React.ReactNode; confirmText?: string; danger?: boolean; onConfirm: () => void; onCancel: () => void; busy?: boolean }) { return <Modal title={title} onClose={onCancel} footer={<><button className="btn" onClick={onCancel} disabled={busy}>取消</button><button className={`btn ${danger ? 'btn-danger' : 'btn-primary'}`} onClick={onConfirm} disabled={busy}>{busy ? <Spinner /> : null}{confirmText}</button></>}><div className="apple-confirm-copy">{message}</div></Modal> }
