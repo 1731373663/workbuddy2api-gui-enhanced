@@ -12,11 +12,12 @@ import (
 )
 
 type providerConfig struct {
-	Name      string `json:"name"`
-	BaseURL   string `json:"base_url"`
-	APIKey    string `json:"api_key"`
-	Protocol  string `json:"protocol,omitempty"`
-	ModelsURL string `json:"models_url,omitempty"`
+	Name      string          `json:"name"`
+	BaseURL   string          `json:"base_url"`
+	APIKey    string          `json:"api_key"`
+	Protocol  string          `json:"protocol,omitempty"`
+	ModelsURL string          `json:"models_url,omitempty"`
+	Models    []providerModel `json:"models,omitempty"`
 }
 
 type providerModel struct {
@@ -48,11 +49,29 @@ func normalizeProviders(raw any) []providerConfig {
 			APIKey:    strings.TrimSpace(fmt.Sprint(m["api_key"])),
 			Protocol:  normalizeProviderProtocol(fmt.Sprint(m["protocol"])),
 			ModelsURL: strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["models_url"])), "/"),
+			Models:    normalizeProviderModels(m["models"]),
 		}
 		if p.Name == "" || p.BaseURL == "" {
 			continue
 		}
 		out = append(out, p)
+	}
+	return out
+}
+
+func normalizeProviderModels(raw any) []providerModel {
+	list, _ := raw.([]any)
+	out := make([]providerModel, 0, len(list))
+	for _, item := range list {
+		m, _ := item.(map[string]any)
+		if m == nil {
+			continue
+		}
+		id := strings.TrimSpace(fmt.Sprint(m["id"]))
+		if id == "" {
+			continue
+		}
+		out = append(out, providerModel{ID: id, Name: strings.TrimSpace(fmt.Sprint(m["name"])), OwnedBy: strings.TrimSpace(fmt.Sprint(m["owned_by"]))})
 	}
 	return out
 }
@@ -103,6 +122,7 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		seen[p.Name] = true
+		p.Models = dedupeProviderModels(p.Models)
 		clean = append(clean, p)
 	}
 	doc["providers"] = clean
@@ -230,6 +250,22 @@ func fetchProviderModels(ctx context.Context, p providerConfig) ([]providerModel
 		out = []providerModel{}
 	}
 	return out, nil
+}
+
+func dedupeProviderModels(in []providerModel) []providerModel {
+	seen := map[string]bool{}
+	out := make([]providerModel, 0, len(in))
+	for _, m := range in {
+		id := strings.TrimSpace(m.ID)
+		if id == "" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		m.ID = id
+		m.Name = strings.TrimSpace(m.Name)
+		out = append(out, m)
+	}
+	return out
 }
 
 func truncateProvider(s string, n int) string {

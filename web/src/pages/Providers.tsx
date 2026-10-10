@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCircle2, Plus, RefreshCw, Save, Server, Trash2, X, Zap } from 'lucide-react'
+import { CheckCircle2, Plus, RefreshCw, Save, Server, Trash2, Zap } from 'lucide-react'
 import { api, ApiError } from '../api'
 import type { SessionInfo } from '../types'
 import { Alert, Spinner } from '../ui'
 
-export interface Provider { name: string; base_url: string; api_key: string; protocol: string; models_url?: string; test_model?: string }
-interface ProviderModel { id: string; name?: string; owned_by?: string }
-const emptyProvider = (): Provider => ({ name: '', base_url: '', api_key: '', protocol: 'chat_completions', models_url: '', test_model: '' })
+export interface ProviderModel { id: string; name?: string; owned_by?: string }
+export interface Provider { name: string; base_url: string; api_key: string; protocol: string; test_model?: string; models?: ProviderModel[] }
+const emptyProvider = (): Provider => ({ name: '', base_url: '', api_key: '', protocol: 'chat_completions', test_model: '', models: [] })
 
 export default function Providers({ session }: { session: SessionInfo }) {
   const [items, setItems] = useState<Provider[]>([])
@@ -16,8 +16,7 @@ export default function Providers({ session }: { session: SessionInfo }) {
   const [notice, setNotice] = useState<string | null>(null)
   const [testing, setTesting] = useState<number | null>(null)
   const [fetching, setFetching] = useState<number | null>(null)
-  const [tested, setTested] = useState<Record<number, ProviderModel[]>>({})
-  const [advanced, setAdvanced] = useState<Record<number, boolean>>({})
+  const [newModel, setNewModel] = useState<Record<number, string>>({})
   const writeDisabled = session.read_only
 
   const load = useCallback(async () => {
@@ -30,9 +29,22 @@ export default function Providers({ session }: { session: SessionInfo }) {
 
   const patch = (index: number, key: keyof Provider, value: string) => setItems((prev) => prev.map((item, i) => i === index ? { ...item, [key]: value } : item))
   const add = () => setItems((prev) => [...prev, emptyProvider()])
-  const remove = (index: number) => { setItems((prev) => prev.filter((_, i) => i !== index)); setTested({}) }
-  const removeModel = (index: number, id: string) => setTested((prev) => ({ ...prev, [index]: (prev[index] ?? []).filter((m) => m.id !== id) }))
-  const clearModels = (index: number) => setTested((prev) => ({ ...prev, [index]: [] }))
+  const remove = (index: number) => setItems((prev) => prev.filter((_, i) => i !== index))
+
+  const modelsOf = (index: number) => items[index]?.models ?? []
+  const setModels = (index: number, models: ProviderModel[]) =>
+    setItems((prev) => prev.map((item, i) => i === index ? { ...item, models } : item))
+  const removeModel = (index: number, id: string) => setModels(index, modelsOf(index).filter((m) => m.id !== id))
+  const renameModel = (index: number, id: string, name: string) =>
+    setModels(index, modelsOf(index).map((m) => m.id === id ? { ...m, name } : m))
+  const addModel = (index: number) => {
+    const id = (newModel[index] ?? '').trim()
+    if (!id) return
+    const list = modelsOf(index)
+    if (list.some((m) => m.id === id)) { setError(`模型 ${id} 已存在`); return }
+    setModels(index, [...list, { id, name: id }])
+    setNewModel((prev) => ({ ...prev, [index]: '' }))
+  }
 
   const testConnection = async (index: number) => {
     const provider = items[index]
@@ -51,8 +63,8 @@ export default function Providers({ session }: { session: SessionInfo }) {
     setFetching(index); setError(null); setNotice(null)
     try {
       const res = await api.providerModels(provider)
-      setTested((prev) => ({ ...prev, [index]: res.models ?? [] }))
-      setNotice(`“${provider.name}”获取到 ${res.count} 个模型`)
+      setModels(index, res.models ?? [])
+      setNotice(`“${provider.name}”获取到 ${res.count} 个模型，点“保存”后生效`)
     } catch (err) { setError(err instanceof ApiError ? err.message : '获取模型失败') }
     finally { setFetching(null) }
   }
@@ -87,19 +99,37 @@ export default function Providers({ session }: { session: SessionInfo }) {
             <div className="field" style={{ flex: '0 1 190px' }}><label>上游协议</label><select value={item.protocol} onChange={(e) => patch(index, 'protocol', e.target.value)} disabled={writeDisabled}><option value="chat_completions">Chat Completions</option><option value="responses">Responses API</option></select></div>
           </div>
           <div className="row" style={{ paddingTop: 0 }}>
-            <button className="btn" onClick={() => setAdvanced((v) => ({ ...v, [index]: !v[index] }))}>高级选项</button>
             <button className="btn" onClick={() => void testConnection(index)} disabled={testing === index}>{testing === index ? <Spinner /> : <Zap size={15} />}测试连接</button>
             <button className="btn" onClick={() => void fetchModels(index)} disabled={fetching === index}>{fetching === index ? <Spinner /> : <RefreshCw size={15} />}获取模型</button>
-            {tested[index]?.length > 0 && <button className="btn" onClick={() => clearModels(index)}><X size={15} />清空结果</button>}
           </div>
           <div className="row" style={{ paddingTop: 0 }}>
             <div className="field" style={{ flex: '1 1 320px' }}><label>测试模型名（可选）</label><input value={item.test_model ?? ''} onChange={(e) => patch(index, 'test_model', e.target.value)} placeholder="例如 deepseek-chat；留空只测 /models" /><div className="desc">连接测试会尝试调用这个模型；不填则只验证模型列表接口。</div></div>
           </div>
-          {advanced[index] && <div className="row"><div className="field" style={{ flex: 1 }}><label>模型列表 URL（可选）</label><input value={item.models_url ?? ''} onChange={(e) => patch(index, 'models_url', e.target.value)} placeholder={`留空自动使用 ${item.base_url || 'Base URL'}/models`} disabled={writeDisabled} /><div className="desc">只有供应商的模型列表不在默认 /models 路径时才需要填写。</div></div></div>}
-          {tested[index]?.length > 0 && <div className="ios-list"><div className="ios-group-title">已获取 {tested[index].length} 个模型（可删除不想要的）</div>{tested[index].slice(0, 100).map((m) => <div className="ios-list-row" key={m.id}><CheckCircle2 size={16} className="text-ok" /><div className="ios-list-main"><strong>{m.name || m.id}</strong><span>{m.id}</span></div><span className="ios-list-value mono">{item.name}:{m.id}</span><button className="ios-text-button" onClick={() => removeModel(index, m.id)}><Trash2 size={14} /></button></div>)}{tested[index].length > 100 && <div className="ios-empty-row">仅显示前 100 个模型。</div>}</div>}
+
+          <div className="ios-list">
+            <div className="ios-group-title">已保存模型 {modelsOf(index).length} 个（显示名用于聊天列表，保存后生效）</div>
+            {modelsOf(index).length === 0 && <div className="ios-empty-row">暂无模型。点“获取模型”拉取，或在下方手动添加。</div>}
+            {modelsOf(index).map((m) => (
+              <div className="ios-list-row" key={m.id}>
+                <CheckCircle2 size={16} className="text-ok" />
+                <div className="ios-list-main">
+                  <strong>{m.name || m.id}</strong>
+                  <span>{m.id}</span>
+                </div>
+                <input style={{ maxWidth: 220 }} value={m.name ?? ''} placeholder={m.id} onChange={(e) => renameModel(index, m.id, e.target.value)} disabled={writeDisabled} />
+                <span className="ios-list-value mono">{item.name}:{m.name || m.id}</span>
+                <button className="ios-text-button" onClick={() => removeModel(index, m.id)} disabled={writeDisabled}><Trash2 size={14} /></button>
+              </div>
+            ))}
+            <div className="ios-list-row">
+              <Plus size={15} />
+              <input style={{ flex: 1 }} value={newModel[index] ?? ''} placeholder="手动添加模型 ID，例如 claude-opus-5-5" onChange={(e) => setNewModel((prev) => ({ ...prev, [index]: e.target.value }))} disabled={writeDisabled} />
+              <button className="btn btn-sm" onClick={() => addModel(index)} disabled={writeDisabled}>添加</button>
+            </div>
+          </div>
         </section>
       ))}
-      <section className="ios-group"><div className="ios-group-head"><h2>保存与生效</h2></div><div className="ios-key-list"><div><dt>保存</dt><dd>写入网关 config.json，不中断当前请求。</dd></div><div><dt>生效</dt><dd>重启网关后，模型出现在 /v1/models。</dd></div></div><div className="row" style={{ paddingTop: 0 }}><button className="btn btn-primary" onClick={() => void save(true)} disabled={writeDisabled || saving || !session.dangerous_ops}><Zap size={16} />保存并重启网关</button></div></section>
+      <section className="ios-group"><div className="ios-group-head"><h2>保存与生效</h2></div><div className="ios-key-list"><div><dt>保存</dt><dd>写入网关 config.json，不中断当前请求。</dd></div><div><dt>生效</dt><dd>重启网关后，保存的模型出现在聊天列表。</dd></div></div><div className="row" style={{ paddingTop: 0 }}><button className="btn btn-primary" onClick={() => void save(true)} disabled={writeDisabled || saving || !session.dangerous_ops}><Zap size={16} />保存并重启网关</button></div></section>
     </div>
   )
 }
