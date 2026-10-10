@@ -162,7 +162,8 @@ export interface LoginSession {
 }
 
 export interface Model {
-  id: string
+    id: string
+    provider?: string
   object: string
   created: number
   owned_by: string

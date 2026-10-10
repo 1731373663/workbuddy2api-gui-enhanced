@@ -233,9 +233,7 @@ export default function Playground() {
             <select value={model} onChange={(e) => setModel(e.target.value)}>
               {models.length === 0 && <option value="">（加载中或网关不可用）</option>}
               {models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.id}
-                </option>
+                <option key={m.id} value={m.id}>{m.provider ? m.id.slice(m.provider.length + 1) : m.id}</option>
               ))}
             </select>
           </div>
