@@ -306,6 +306,62 @@ export default function ConfigPage({ session }: { session: SessionInfo }) {
 
           <div className="ios-group">
             <div className="ios-group-head">
+          <div className="ios-group">
+            <div className="ios-group-head">
+              <h2>供应商配置</h2>
+              <button
+                className="btn btn-sm"
+                type="button"
+                disabled={writeDisabled}
+                onClick={() => {
+                  const list = Array.isArray(getPath(doc, 'providers')) ? [...(getPath(doc, 'providers') as Array<Record<string, unknown>>)] : []
+                  list.push({ name: '', base_url: '', api_key: '', protocol: 'chat_completions', models_url: '' })
+                  update('providers', list)
+                }}
+              >
+                + 添加供应商
+              </button>
+            </div>
+            <div className="desc">
+              模型名使用 <span className="mono">供应商名:模型名</span>，例如 <span className="mono">deepseek:deepseek-chat</span>。协议可选 Chat Completions 或 Responses。
+            </div>
+            {(() => {
+              const list = Array.isArray(getPath(doc, 'providers')) ? (getPath(doc, 'providers') as Array<Record<string, unknown>>) : []
+              if (list.length === 0) return <div className="empty">尚未配置供应商。</div>
+              const patch = (index: number, key: string, value: unknown) => {
+                const next = list.map((item, i) => (i === index ? { ...item, [key]: value } : item))
+                update('providers', next)
+              }
+              return list.map((item, index) => (
+                <div className="row" key={index} style={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div className="field" style={{ flex: '1 1 150px' }}>
+                    <label>名称</label>
+                    <input value={String(item.name ?? '')} onChange={(e) => patch(index, 'name', e.target.value.trim())} placeholder="deepseek" disabled={writeDisabled} />
+                  </div>
+                  <div className="field" style={{ flex: '2 1 280px' }}>
+                    <label>Base URL</label>
+                    <input value={String(item.base_url ?? '')} onChange={(e) => patch(index, 'base_url', e.target.value)} placeholder="https://api.example.com/v1" disabled={writeDisabled} />
+                  </div>
+                  <div className="field" style={{ flex: '1 1 210px' }}>
+                    <label>API Key</label>
+                    <input type="password" value={String(item.api_key ?? '')} onChange={(e) => patch(index, 'api_key', e.target.value)} placeholder="sk-..." disabled={writeDisabled} />
+                  </div>
+                  <div className="field" style={{ flex: '0 1 180px' }}>
+                    <label>协议</label>
+                    <select value={String(item.protocol ?? 'chat_completions')} onChange={(e) => patch(index, 'protocol', e.target.value)} disabled={writeDisabled}>
+                      <option value="chat_completions">Chat Completions</option>
+                      <option value="responses">Responses API</option>
+                    </select>
+                  </div>
+                  <div className="field" style={{ flex: '1 1 220px' }}>
+                    <label>模型列表 URL（可选）</label>
+                    <input value={String(item.models_url ?? '')} onChange={(e) => patch(index, 'models_url', e.target.value)} placeholder="留空使用 Base URL + /models" disabled={writeDisabled} />
+                  </div>
+                  <button className="btn btn-danger" type="button" disabled={writeDisabled} onClick={() => update('providers', list.filter((_, i) => i !== index))}>删除</button>
+                </div>
+              ))
+            })()}
+          </div>
               <h2>定时任务</h2>
               <span className="hint">时间按容器时区（compose 默认 Asia/Shanghai）</span>
             </div>

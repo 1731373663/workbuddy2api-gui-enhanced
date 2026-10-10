@@ -48,6 +48,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
   const [busyUid, setBusyUid] = useState<string | null>(null)
 
   const [detailUid, setDetailUid] = useState<string | null>(null)
+  const [modelUid, setModelUid] = useState<string | null>(null)
   const [taskId, setTaskId] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null)
@@ -223,11 +224,12 @@ export default function Accounts({ session }: { session: SessionInfo }) {
             <button className="ios-account-identity" onClick={() => setDetailUid(a.uid)}><strong>{displayName(a)}</strong><span>{a.uid.slice(0, 8)}{a.in_gateway && a.in_flight > 0 ? ` · 在途 ${a.in_flight}` : ''}</span></button>
             <div className="ios-account-status"><Badge cls={b.cls}>{b.text}</Badge>{a.cooling && <small>{coolKindText(a.cool_kind)} · {fmtDuration(a.cool_remaining_sec)}</small>}{a.disabled && a.reason && <small>{a.reason}</small>}</div>
             <div className="ios-account-balance"><strong>{fmtNum(a.live_credits ?? a.credits)}</strong><small>积分</small></div>
-            <div className="ios-account-actions"><QuickButton label="签到" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'checkin')} /><QuickButton label="刷新" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'refresh')} /><QuickButton label="猫猫" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'travel')} /><QuickButton label="积分" busy={busy} disabled={busy} onClick={() => void runSingle(a, 'credits')} /><button className="ios-danger-button" disabled={busy || writeDisabled || !session.dangerous_ops || !a.has_file} onClick={() => setDeleteTarget(a)} title="删除账号凭证"><Trash2 size={15} /></button></div>
+            <div className="ios-account-actions"><QuickButton label="签到" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'checkin')} /><QuickButton label="刷新" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'refresh')} /><QuickButton label="猫猫" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'travel')} /><QuickButton label="积分" busy={busy} disabled={busy} onClick={() => void runSingle(a, 'credits')} /><QuickButton label="模型" busy={false} disabled={false} onClick={() => setModelUid(a.uid)} /><button className="ios-danger-button" disabled={busy || writeDisabled || !session.dangerous_ops || !a.has_file} onClick={() => setDeleteTarget(a)} title="删除账号凭证"><Trash2 size={15} /></button></div>
           </article> })}
         </div>}
       </section>
       {detailUid && <AccountDetail uid={detailUid} onClose={() => setDetailUid(null)} />}
+      {modelUid && <AccountModelDialog uid={modelUid} onClose={() => setModelUid(null)} />}
       {taskId && <TaskProgress taskId={taskId} onClose={() => setTaskId(null)} onFinished={() => void load(true)} />}
       {showImport && <ImportDialog onClose={() => setShowImport(false)} onDone={(msg) => { setShowImport(false); setNotice({ kind: 'ok', text: msg }); void load(true) }} onError={(msg) => setNotice({ kind: 'error', text: msg })} />}
       {deleteTarget && <ConfirmDialog title="删除账号凭证" danger confirmText="确认删除" busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void doDelete()} message={<><p style={{ marginTop: 0 }}>即将删除账号 <strong>{displayName(deleteTarget)}</strong> 的凭证文件。</p><p>该操作不可从上游恢复，需要重新登录才能找回账号。</p></>} />}
@@ -361,6 +363,89 @@ function AccountDetail({ uid, onClose }: { uid: string; onClose: () => void }) {
   )
 }
 
+function AccountModelDialog({ uid, onClose }: { uid: string; onClose: () => void }) {
+  const [models, setModels] = useState<Array<{ id: string; name?: string; public_name: string; enabled: boolean; context_length?: number; max_output_tokens?: number }>>([])
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({})
+  const [aliases, setAliases] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    api.accountModels(uid).then((res) => {
+      if (cancelled) return
+      setModels(res.models ?? [])
+      const nextEnabled: Record<string, boolean> = {}
+      const nextAliases: Record<string, string> = {}
+      for (const m of res.models ?? []) {
+        nextEnabled[m.id] = m.enabled
+        if (m.public_name && m.public_name !== m.id) nextAliases[m.id] = m.public_name
+      }
+      setEnabled(nextEnabled)
+      setAliases(nextAliases)
+      setError(null)
+    }).catch((err) => {
+      if (!cancelled) setError(err instanceof ApiError ? err.message : '加载账号模型失败')
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [uid])
+
+  const save = async () => {
+    setSaving(true); setError(null); setNotice(null)
+    try {
+      const enabledList = models.filter((m) => enabled[m.id]).map((m) => m.id)
+      const aliasMap: Record<string, string> = {}
+      for (const [real, alias] of Object.entries(aliases)) {
+        if (alias.trim() && alias.trim() !== real) aliasMap[real] = alias.trim()
+      }
+      const res = await api.saveAccountModels(uid, enabledList, aliasMap)
+      setNotice(res.message)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '保存失败')
+    } finally { setSaving(false) }
+  }
+
+  const setAll = (value: boolean) => {
+    const next: Record<string, boolean> = {}
+    for (const m of models) next[m.id] = value
+    setEnabled(next)
+  }
+
+  return (
+    <Modal title={`模型管理 · ${uid.slice(0, 8)}`} onClose={onClose} wide footer={<><button className="btn" onClick={onClose}>关闭</button><button className="btn btn-primary" onClick={() => void save()} disabled={saving || loading}>{saving ? <Spinner /> : null}保存设置</button></>}>
+      {loading && <Spinner label="正在加载该账号可用模型…" />}
+      {error && <Alert kind="error">{error}</Alert>}
+      {notice && <Alert kind="ok" onClose={() => setNotice(null)}>{notice}</Alert>}
+      {!loading && models.length === 0 && <div className="empty">该账号没有返回可用模型。</div>}
+      {models.length > 0 && <>
+        <div className="page-actions" style={{ marginBottom: 10 }}>
+          <button className="btn btn-sm" onClick={() => setAll(true)}>全部启用</button>
+          <button className="btn btn-sm" onClick={() => setAll(false)}>全部关闭</button>
+          <span className="hint">已启用 {models.filter((m) => enabled[m.id]).length} / {models.length}</span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th style={{ width: 70 }}>启用</th><th>上游模型</th><th>公开名称</th><th>上下文</th></tr></thead>
+            <tbody>
+              {models.map((m) => <tr key={m.id}>
+                <td><input type="checkbox" checked={enabled[m.id] ?? false} onChange={(e) => setEnabled((prev) => ({ ...prev, [m.id]: e.target.checked }))} /></td>
+                <td><span className="mono">{m.id}</span>{m.name && <div className="text-faint" style={{ fontSize: 12 }}>{m.name}</div>}</td>
+                <td><input value={aliases[m.id] ?? ''} onChange={(e) => setAliases((prev) => ({ ...prev, [m.id]: e.target.value }))} placeholder={m.id} disabled={!(enabled[m.id] ?? false)} /></td>
+                <td className="mono">{m.context_length ? `${Math.round(m.context_length / 1000)}K` : '—'}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+        <div className="desc">关闭后该账号不会承接该模型请求；公开名称修改后，网关对外使用新名称，请求仍会映射回上游真实模型名。</div>
+      </>}
+    </Modal>
+  )
+}
 /** ImportDialog 手工导入凭证（从别的机器迁移 / 复用 login.sh 产物）。 */
 function ImportDialog({
   onClose,

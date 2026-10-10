@@ -7,6 +7,7 @@ import {
   CircleUserRound,
   Gauge,
   LogOut,
+  Server,
   ShieldAlert,
   SlidersHorizontal,
   UsersRound,
@@ -22,6 +23,7 @@ import Accounts from './pages/Accounts'
 import LoginWizard from './pages/LoginWizard'
 import Playground from './pages/Playground'
 import ConfigPage from './pages/ConfigPage'
+import Providers from './pages/Providers'
 import System from './pages/System'
 
 const NAV = [
@@ -30,6 +32,7 @@ const NAV = [
   { to: '/stats', label: '统计', detail: '请求与费用', icon: BarChart3 },
   { to: '/login', label: '添加账号', detail: 'OAuth 登录', icon: CircleUserRound },
   { to: '/playground', label: '聊天测试', detail: '接口验证', icon: Bot },
+  { to: '/providers', label: '供应商', detail: '第三方模型接入', icon: Server },
   { to: '/config', label: '配置', detail: 'gateway.json', icon: SlidersHorizontal },
   { to: '/system', label: '系统', detail: '容器与运行状态', icon: Wrench },
 ]
@@ -129,6 +132,7 @@ function Shell({ session, onLogout, onSessionRefresh }: { session: SessionInfo; 
           <Route path="/stats" element={<StatsPage session={session} />} />
           <Route path="/login" element={<LoginWizard session={session} onDone={onSessionRefresh} />} />
           <Route path="/playground" element={<Playground />} />
+          <Route path="/providers" element={<Providers session={session} />} />
           <Route path="/config" element={<ConfigPage session={session} />} />
           <Route path="/system" element={<System session={session} onSessionRefresh={onSessionRefresh} />} />
           <Route path="*" element={<Navigate to="/" replace />} />

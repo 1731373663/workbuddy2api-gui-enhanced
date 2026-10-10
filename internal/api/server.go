@@ -61,6 +61,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/accounts/{uid}/refresh", s.handleAccountRefresh)
 	mux.HandleFunc("POST /api/accounts/{uid}/travel", s.handleAccountTravel)
 	mux.HandleFunc("POST /api/accounts/{uid}/credits", s.handleAccountCredits)
+	mux.HandleFunc("GET /api/accounts/{uid}/models", s.handleAccountModels)
+	mux.HandleFunc("PUT /api/accounts/{uid}/models", s.handleAccountModelSettingsPut)
 
 	// ── 批量任务 ──────────────────────────────────────────
 	mux.HandleFunc("POST /api/tasks/checkin", s.handleBatchCheckin)
@@ -93,6 +95,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/config", s.handleConfigPut)
 	mux.HandleFunc("POST /api/config/reset", s.handleConfigReset)
 
+	// ── 供应商配置 ────────────────────────────────────────
+	mux.HandleFunc("GET /api/providers", s.handleProvidersGet)
+	mux.HandleFunc("PUT /api/providers", s.handleProvidersPut)
+	mux.HandleFunc("POST /api/providers/models", s.handleProviderModels)
+	mux.HandleFunc("POST /api/providers/test", s.handleProviderTest)
 	// ── 系统 ──────────────────────────────────────────────
 	mux.HandleFunc("GET /api/system", s.handleSystem)
 	mux.HandleFunc("POST /api/system/restart", s.handleSystemRestart)

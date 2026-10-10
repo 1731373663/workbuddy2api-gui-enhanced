@@ -104,6 +104,9 @@ export const api = {
   accountTravel: (uid: string) => post<OpResult>(`/api/accounts/${encodeURIComponent(uid)}/travel`),
   accountCredits: (uid: string) => post<Credits>(`/api/accounts/${encodeURIComponent(uid)}/credits`),
 
+  // 单账号模型
+  accountModels: (uid: string) => get<{ uid: string; models: Array<{ id: string; name?: string; public_name: string; enabled: boolean; context_length?: number; max_output_tokens?: number }>; enabled: string[] | null; aliases: Record<string, string> | null; account?: string; realm?: string }>(`/api/accounts/${encodeURIComponent(uid)}/models`),
+  saveAccountModels: (uid: string, enabled_models: string[], model_aliases: Record<string, string>) => put<{ ok: boolean; message: string }>(`/api/accounts/${encodeURIComponent(uid)}/models`, { enabled_models, model_aliases }),
   // 批量任务
   batchCheckin: (uids: string[]) => post<TaskView>('/api/tasks/checkin', { uids }),
   batchRefresh: (uids: string[]) => post<TaskView>('/api/tasks/refresh', { uids }),
@@ -149,6 +152,13 @@ export const api = {
       payload.conversationId ? { 'X-Conversation-Id': payload.conversationId } : undefined,
     ),
 
+  // 供应商
+  providers: () => get<{ providers: import('./pages/Providers').Provider[] }>('/api/providers'),
+  saveProviders: (providers: import('./pages/Providers').Provider[]) =>
+    put<{ ok: boolean; message: string; providers: import('./pages/Providers').Provider[] }>('/api/providers', { providers }),
+  providerTest: (provider: import('./pages/Providers').Provider) => post<{ ok: boolean; message: string }>('/api/providers/test', provider),
+  providerModels: (provider: import('./pages/Providers').Provider) =>
+    post<{ models: Array<{ id: string; name?: string; owned_by?: string }>; count: number }>('/api/providers/models', provider),
   // 配置
   config: () => get<ConfigResponse>('/api/config'),
   saveConfig: (doc: Record<string, unknown>) => put<{ ok: boolean; message: string }>('/api/config', doc),

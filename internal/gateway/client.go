@@ -179,6 +179,45 @@ func (c *Client) Models(ctx context.Context) ([]Model, error) {
 	return out.Data, nil
 }
 
+// AccountModelSettings is the per-account model visibility and alias payload.
+type AccountModelSettings struct {
+	EnabledModels []string          `json:"enabled_models"`
+	Aliases       map[string]string `json:"model_aliases"`
+}
+
+// AccountModels fetches the model catalog available to one account.
+func (c *Client) AccountModels(ctx context.Context, uid string) (map[string]any, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/v1/account-models/"+url.PathEscape(uid), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("网关 /v1/account-models 返回 HTTP %d: %s", resp.StatusCode, truncate(string(raw), 200))
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("解析账号模型失败: %w", err)
+	}
+	return out, nil
+}
+
+// SaveAccountModels writes the account model visibility and alias policy.
+func (c *Client) SaveAccountModels(ctx context.Context, uid string, enabled []string, aliases map[string]string) error {
+	body, _ := json.Marshal(AccountModelSettings{EnabledModels: enabled, Aliases: aliases})
+	resp, err := c.do(ctx, http.MethodPut, "/v1/account-models/"+url.PathEscape(uid), body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("保存账号模型失败 HTTP %d: %s", resp.StatusCode, truncate(string(raw), 200))
+	}
+	return nil
+}
+
 // ChatResult 非流式聊天结果。
 type ChatResult struct {
 	Content          string `json:"content"`

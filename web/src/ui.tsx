@@ -118,8 +118,8 @@ export function Alert({
     info: Info,
   }[kind]
 
-  return (
-    <div className={`alert alert-${kind} ios-alert`}>
+  const content = (
+    <>
       <span className="alert-icon">
         <Icon size={16} strokeWidth={1.9} aria-hidden="true" />
       </span>
@@ -129,8 +129,12 @@ export function Alert({
           <X size={14} aria-hidden="true" />
         </button>
       )}
-    </div>
+    </>
   )
+  if (onClose) {
+    return <div className={`alert alert-${kind} ios-alert ios-toast`} role={kind === 'error' ? 'alert' : 'status'}>{content}</div>
+  }
+  return <div className={`alert alert-${kind} ios-alert`}>{content}</div>
 }
 
 export function Modal({
