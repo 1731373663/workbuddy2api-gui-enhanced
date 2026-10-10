@@ -1,5 +1,6 @@
 // ui.tsx 通用展示组件与格式化工具。
 import React, { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 
 /** 把 Unix 秒格式化为本地时间字符串。 */
@@ -132,7 +133,10 @@ export function Alert({
     </>
   )
   if (onClose) {
-    return <div className={`alert alert-${kind} ios-alert ios-toast`} role={kind === 'error' ? 'alert' : 'status'}>{content}</div>
+    return createPortal(
+      <div className={`alert alert-${kind} ios-alert ios-toast`} role={kind === 'error' ? 'alert' : 'status'}>{content}</div>,
+      document.body,
+    )
   }
   return <div className={`alert alert-${kind} ios-alert`}>{content}</div>
 }
