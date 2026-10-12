@@ -21,9 +21,11 @@ type providerConfig struct {
 }
 
 type providerModel struct {
-	ID      string `json:"id"`
-	Name    string `json:"name,omitempty"`
-	OwnedBy string `json:"owned_by,omitempty"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name,omitempty"`
+	OwnedBy       string   `json:"owned_by,omitempty"`
+	Efforts       []string `json:"efforts,omitempty"`
+	DefaultEffort string   `json:"default_effort,omitempty"`
 }
 
 func normalizeProviderProtocol(raw string) string {
@@ -76,7 +78,22 @@ func normalizeProviderModels(raw any) []providerModel {
 		if id == "" {
 			continue
 		}
-		out = append(out, providerModel{ID: id, Name: providerString(m["name"]), OwnedBy: providerString(m["owned_by"])})
+		out = append(out, providerModel{ID: id, Name: providerString(m["name"]), OwnedBy: providerString(m["owned_by"]), Efforts: providerStringList(m["efforts"]), DefaultEffort: providerString(m["default_effort"])})
+	}
+	return out
+}
+
+// providerStringList converts an optional JSON string array, dropping blanks.
+func providerStringList(raw any) []string {
+	list, _ := raw.([]any)
+	out := make([]string, 0, len(list))
+	for _, item := range list {
+		if v := providerString(item); v != "" {
+			out = append(out, v)
+		}
+	}
+	if len(out) == 0 {
+		return nil
 	}
 	return out
 }

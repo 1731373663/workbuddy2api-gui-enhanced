@@ -4,7 +4,7 @@ import { api, ApiError } from '../api'
 import type { SessionInfo } from '../types'
 import { Alert, Spinner } from '../ui'
 
-export interface ProviderModel { id: string; name?: string; owned_by?: string }
+export interface ProviderModel { id: string; name?: string; owned_by?: string; efforts?: string[]; default_effort?: string }
 export interface Provider { name: string; base_url: string; api_key: string; protocol: string; test_model?: string; models?: ProviderModel[]; models_set?: boolean }
 const emptyProvider = (): Provider => ({ name: '', base_url: '', api_key: '', protocol: 'chat_completions', test_model: '', models: [] })
 
@@ -37,6 +37,10 @@ export default function Providers({ session }: { session: SessionInfo }) {
   const removeModel = (index: number, id: string) => setModels(index, modelsOf(index).filter((m) => m.id !== id))
   const renameModel = (index: number, id: string, name: string) =>
     setModels(index, modelsOf(index).map((m) => m.id === id ? { ...m, name } : m))
+  const setModelEfforts = (index: number, id: string, raw: string) => {
+    const efforts = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+    setModels(index, modelsOf(index).map((m) => m.id === id ? { ...m, efforts, default_effort: efforts.includes(m.default_effort ?? '') ? m.default_effort : (efforts[0] ?? '') } : m))
+  }
   const addModel = (index: number) => {
     const id = (newModel[index] ?? '').trim()
     if (!id) return
@@ -117,6 +121,7 @@ export default function Providers({ session }: { session: SessionInfo }) {
                   <span>{m.id}</span>
                 </div>
                 <input style={{ maxWidth: 220 }} value={m.name ?? ''} placeholder={m.id} onChange={(e) => renameModel(index, m.id, e.target.value)} disabled={writeDisabled} />
+                <input style={{ maxWidth: 170 }} value={(m.efforts ?? []).join(',')} placeholder="推理档位，如 low,high" onChange={(e) => setModelEfforts(index, m.id, e.target.value)} disabled={writeDisabled} />
                 <span className="ios-list-value mono">{item.name}:{m.name || m.id}</span>
                 <button className="ios-text-button" onClick={() => removeModel(index, m.id)} disabled={writeDisabled}><Trash2 size={14} /></button>
               </div>
