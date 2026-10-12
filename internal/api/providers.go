@@ -12,12 +12,11 @@ import (
 )
 
 type providerConfig struct {
-	Name      string          `json:"name"`
-	BaseURL   string          `json:"base_url"`
-	APIKey    string          `json:"api_key"`
-	Protocol  string          `json:"protocol,omitempty"`
-	ModelsURL string          `json:"models_url,omitempty"`
-	Models    []providerModel `json:"models,omitempty"`
+	Name     string          `json:"name"`
+	BaseURL  string          `json:"base_url"`
+	APIKey   string          `json:"api_key"`
+	Protocol string          `json:"protocol,omitempty"`
+	Models   []providerModel `json:"models,omitempty"`
 }
 
 type providerModel struct {
@@ -44,12 +43,11 @@ func normalizeProviders(raw any) []providerConfig {
 			continue
 		}
 		p := providerConfig{
-			Name:      strings.TrimSpace(fmt.Sprint(m["name"])),
-			BaseURL:   strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["base_url"])), "/"),
-			APIKey:    strings.TrimSpace(fmt.Sprint(m["api_key"])),
-			Protocol:  normalizeProviderProtocol(fmt.Sprint(m["protocol"])),
-			ModelsURL: strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["models_url"])), "/"),
-			Models:    normalizeProviderModels(m["models"]),
+			Name:     strings.TrimSpace(fmt.Sprint(m["name"])),
+			BaseURL:  strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["base_url"])), "/"),
+			APIKey:   strings.TrimSpace(fmt.Sprint(m["api_key"])),
+			Protocol: normalizeProviderProtocol(fmt.Sprint(m["protocol"])),
+			Models:   normalizeProviderModels(m["models"]),
 		}
 		if p.Name == "" || p.BaseURL == "" {
 			continue
@@ -59,7 +57,12 @@ func normalizeProviders(raw any) []providerConfig {
 	return out
 }
 
+// normalizeProviderModels returns nil when the models key is absent so callers
+// can tell "not provided" apart from an explicit empty list.
 func normalizeProviderModels(raw any) []providerModel {
+	if raw == nil {
+		return nil
+	}
 	list, _ := raw.([]any)
 	out := make([]providerModel, 0, len(list))
 	for _, item := range list {
@@ -108,7 +111,6 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 		p.Name = strings.TrimSpace(p.Name)
 		p.BaseURL = strings.TrimRight(strings.TrimSpace(p.BaseURL), "/")
 		p.APIKey = strings.TrimSpace(p.APIKey)
-		p.ModelsURL = strings.TrimRight(strings.TrimSpace(p.ModelsURL), "/")
 		p.Protocol = normalizeProviderProtocol(p.Protocol)
 		if p.Name == "" || p.BaseURL == "" {
 			continue
@@ -122,8 +124,29 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		seen[p.Name] = true
-		p.Models = dedupeProviderModels(p.Models)
+		if p.Models != nil {
+			p.Models = dedupeProviderModels(p.Models)
+		}
 		clean = append(clean, p)
+	}
+	// Preserve saved model lists when the client did not send a models field.
+	if existing, ok := doc["providers"].([]any); ok {
+		byName := map[string][]providerModel{}
+		for _, item := range existing {
+			m, _ := item.(map[string]any)
+			if m == nil {
+				continue
+			}
+			name := strings.TrimSpace(fmt.Sprint(m["name"]))
+			if name != "" {
+				byName[name] = normalizeProviderModels(m["models"])
+			}
+		}
+		for i := range clean {
+			if clean[i].Models == nil {
+				clean[i].Models = byName[clean[i].Name]
+			}
+		}
 	}
 	doc["providers"] = clean
 	fallback, err := s.svc.WriteUpstreamConfigDetailed(doc)
@@ -210,10 +233,7 @@ func fetchProviderModels(ctx context.Context, p providerConfig) ([]providerModel
 	if strings.TrimSpace(p.BaseURL) == "" {
 		return nil, fmt.Errorf("Base URL 不能为空")
 	}
-	endpoint := strings.TrimSpace(p.ModelsURL)
-	if endpoint == "" {
-		endpoint = strings.TrimRight(p.BaseURL, "/") + "/models"
-	}
+	endpoint := strings.TrimRight(p.BaseURL, "/") + "/models"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
