@@ -5,7 +5,7 @@ import type { SessionInfo } from '../types'
 import { Alert, Spinner } from '../ui'
 
 export interface ProviderModel { id: string; name?: string; owned_by?: string }
-export interface Provider { name: string; base_url: string; api_key: string; protocol: string; test_model?: string; models?: ProviderModel[] }
+export interface Provider { name: string; base_url: string; api_key: string; protocol: string; test_model?: string; models?: ProviderModel[]; models_set?: boolean }
 const emptyProvider = (): Provider => ({ name: '', base_url: '', api_key: '', protocol: 'chat_completions', test_model: '', models: [] })
 
 export default function Providers({ session }: { session: SessionInfo }) {
@@ -72,7 +72,7 @@ export default function Providers({ session }: { session: SessionInfo }) {
   const save = async (restart = false) => {
     setSaving(true); setError(null); setNotice(null)
     try {
-      const res = await api.saveProviders(items)
+      const res = await api.saveProviders(items.map((it) => ({ ...it, models_set: true })))
       if (restart) { const rr = await api.restart(); setNotice(rr.message) } else setNotice(res.message)
       await load()
     } catch (err) { setError(err instanceof ApiError ? err.message : '保存失败') }

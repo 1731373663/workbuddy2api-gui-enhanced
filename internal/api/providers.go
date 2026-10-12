@@ -12,11 +12,12 @@ import (
 )
 
 type providerConfig struct {
-	Name     string          `json:"name"`
-	BaseURL  string          `json:"base_url"`
-	APIKey   string          `json:"api_key"`
-	Protocol string          `json:"protocol,omitempty"`
-	Models   []providerModel `json:"models,omitempty"`
+	Name      string          `json:"name"`
+	BaseURL   string          `json:"base_url"`
+	APIKey    string          `json:"api_key"`
+	Protocol  string          `json:"protocol,omitempty"`
+	Models    []providerModel `json:"models,omitempty"`
+	ModelsSet bool            `json:"models_set,omitempty"`
 }
 
 type providerModel struct {
@@ -43,11 +44,12 @@ func normalizeProviders(raw any) []providerConfig {
 			continue
 		}
 		p := providerConfig{
-			Name:     strings.TrimSpace(fmt.Sprint(m["name"])),
-			BaseURL:  strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["base_url"])), "/"),
-			APIKey:   strings.TrimSpace(fmt.Sprint(m["api_key"])),
-			Protocol: normalizeProviderProtocol(fmt.Sprint(m["protocol"])),
-			Models:   normalizeProviderModels(m["models"]),
+			Name:      strings.TrimSpace(fmt.Sprint(m["name"])),
+			BaseURL:   strings.TrimRight(strings.TrimSpace(fmt.Sprint(m["base_url"])), "/"),
+			APIKey:    strings.TrimSpace(fmt.Sprint(m["api_key"])),
+			Protocol:  normalizeProviderProtocol(fmt.Sprint(m["protocol"])),
+			Models:    normalizeProviderModels(m["models"]),
+			ModelsSet: m["models_set"] == true || m["models"] != nil,
 		}
 		if p.Name == "" || p.BaseURL == "" {
 			continue
@@ -126,6 +128,7 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 		seen[p.Name] = true
 		if p.Models != nil {
 			p.Models = dedupeProviderModels(p.Models)
+			p.ModelsSet = true
 		}
 		clean = append(clean, p)
 	}
@@ -145,6 +148,7 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 		for i := range clean {
 			if clean[i].Models == nil {
 				clean[i].Models = byName[clean[i].Name]
+				clean[i].ModelsSet = true
 			}
 		}
 	}
