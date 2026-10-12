@@ -63,7 +63,7 @@ export default function Providers({ session }: { session: SessionInfo }) {
     setFetching(index); setError(null); setNotice(null)
     try {
       const res = await api.providerModels(provider)
-      setModels(index, res.models ?? [])
+      setModels(index, (res.models ?? []).map((m) => ({ ...m, name: m.name || m.id })))
       setNotice(`“${provider.name}”获取到 ${res.count} 个模型，点“保存”后生效`)
     } catch (err) { setError(err instanceof ApiError ? err.message : '获取模型失败') }
     finally { setFetching(null) }

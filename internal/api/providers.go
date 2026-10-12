@@ -76,9 +76,22 @@ func normalizeProviderModels(raw any) []providerModel {
 		if id == "" {
 			continue
 		}
-		out = append(out, providerModel{ID: id, Name: strings.TrimSpace(fmt.Sprint(m["name"])), OwnedBy: strings.TrimSpace(fmt.Sprint(m["owned_by"]))})
+		out = append(out, providerModel{ID: id, Name: providerString(m["name"]), OwnedBy: providerString(m["owned_by"])})
 	}
 	return out
+}
+
+// providerString returns a trimmed string for optional JSON fields. A missing
+// or nil value yields "" instead of the literal "<nil>" that fmt.Sprint emits.
+func providerString(raw any) string {
+	if raw == nil {
+		return ""
+	}
+	s := strings.TrimSpace(fmt.Sprint(raw))
+	if s == "<nil>" {
+		return ""
+	}
+	return s
 }
 
 func (s *Server) handleProvidersGet(w http.ResponseWriter, r *http.Request) {
