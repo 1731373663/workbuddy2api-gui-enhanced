@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import type { LoginSession, SessionInfo } from '../types'
 import { Alert, Spinner } from '../ui'
+import GeminiBind from './GeminiBind'
 
 const STEPS = ['发起授权', '浏览器登录', '保存凭证'] as const
 
@@ -294,6 +295,8 @@ export default function LoginWizard({
           {manualUID && <div className="desc">会话：{manualUID}</div>}
         </div>
       )}
+
+      <GeminiBind session={session} />
 
       <div className="ios-group">
         <div className="ios-group-head">

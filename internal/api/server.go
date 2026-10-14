@@ -99,6 +99,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/providers", s.handleProvidersGet)
 	mux.HandleFunc("PUT /api/providers", s.handleProvidersPut)
 	mux.HandleFunc("POST /api/providers/models", s.handleProviderModels)
+	mux.HandleFunc("GET /api/gemini/auth-url", s.handleGeminiAuthURL)
+	mux.HandleFunc("POST /api/gemini/exchange", s.handleGeminiExchange)
 	mux.HandleFunc("POST /api/providers/test", s.handleProviderTest)
 	// ── 系统 ──────────────────────────────────────────────
 	mux.HandleFunc("GET /api/system", s.handleSystem)

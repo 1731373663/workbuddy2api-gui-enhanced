@@ -159,6 +159,8 @@ export const api = {
   providerTest: (provider: import('./pages/Providers').Provider) => post<{ ok: boolean; message: string }>('/api/providers/test', provider),
   providerModels: (provider: import('./pages/Providers').Provider) =>
     post<{ models: Array<{ id: string; name?: string; owned_by?: string }>; count: number }>('/api/providers/models', provider),
+  geminiAuthUrl: () => get<{ auth_url: string; redirect: string }>('/api/gemini/auth-url'),
+  geminiExchange: (code: string, name: string) => post<{ ok: boolean; message: string; email?: string; name: string }>('/api/gemini/exchange', { code, name }),
   // 配置
   config: () => get<ConfigResponse>('/api/config'),
   saveConfig: (doc: Record<string, unknown>) => put<{ ok: boolean; message: string }>('/api/config', doc),
