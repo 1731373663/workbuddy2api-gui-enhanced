@@ -32,6 +32,8 @@ func normalizeProviderProtocol(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "responses", "response", "responses_api":
 		return "responses"
+	case "gemini_code_assist", "gemini", "code_assist", "google_gemini":
+		return "gemini_code_assist"
 	default:
 		return "chat_completions"
 	}
@@ -151,9 +153,13 @@ func (s *Server) handleProvidersPut(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "供应商名称重复: " + p.Name})
 			return
 		}
-		if _, err := url.ParseRequestURI(p.BaseURL); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Base URL 非法: " + p.BaseURL})
-			return
+		// The Gemini Code Assist provider has no user-supplied base URL; it talks
+		// to Google fixed Cloud Code endpoint, so a placeholder is accepted.
+		if normalizeProviderProtocol(p.Protocol) != "gemini_code_assist" {
+			if _, err := url.ParseRequestURI(p.BaseURL); err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Base URL 非法: " + p.BaseURL})
+				return
+			}
 		}
 		seen[p.Name] = true
 		if p.Models != nil {

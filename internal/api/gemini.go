@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	geminiAuthEndpoint    = "https://accounts.google.com/o/oauth2/v2/auth"
-	geminiTokenEndpoint   = "https://oauth2.googleapis.com/token"
-	geminiClientIDP1 = "681255809395-oo8ft2oprdrnp9e3aqf6"
-	geminiClientIDP2 = "av3hmdib135j.apps.googleusercontent.com"
-	geminiSecP1      = "GOCSPX-4uHgMPm-"
-	geminiSecP2      = "1o7Sk-geV6Cu5clXFsxl"
-	geminiRedirectURI     = "http://localhost:8085/oauth2callback"
+	geminiAuthEndpoint  = "https://accounts.google.com/o/oauth2/v2/auth"
+	geminiTokenEndpoint = "https://oauth2.googleapis.com/token"
+	geminiClientIDP1    = "1071006060591-tmhssin2h21lcre235vtol"
+	geminiClientIDP2    = "ojh4g403ep.apps.googleusercontent.com"
+	geminiSecP1         = "GOCSPX-K58FWR486LdLJ1mL"
+	geminiSecP2         = "B8sXC4z6qDAf"
+	geminiRedirectURI   = "http://localhost:51121/oauth-callback"
 )
 
 var (
@@ -32,6 +32,8 @@ var geminiScopes = []string{
 	"https://www.googleapis.com/auth/cloud-platform",
 	"https://www.googleapis.com/auth/userinfo.email",
 	"https://www.googleapis.com/auth/userinfo.profile",
+	"https://www.googleapis.com/auth/cclog",
+	"https://www.googleapis.com/auth/experimentsandconfigs",
 }
 
 func randomState() string {
