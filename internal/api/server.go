@@ -61,6 +61,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/accounts/{uid}/refresh", s.handleAccountRefresh)
 	mux.HandleFunc("POST /api/accounts/{uid}/travel", s.handleAccountTravel)
 	mux.HandleFunc("POST /api/accounts/{uid}/credits", s.handleAccountCredits)
+	mux.HandleFunc("POST /api/accounts/{uid}/revive", s.handleAccountRevive)
 	mux.HandleFunc("GET /api/accounts/{uid}/models", s.handleAccountModels)
 	mux.HandleFunc("PUT /api/accounts/{uid}/models", s.handleAccountModelSettingsPut)
 
@@ -218,6 +219,15 @@ func (s *Server) handleAccountCredits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, c)
+}
+
+func (s *Server) handleAccountRevive(w http.ResponseWriter, r *http.Request) {
+	res, err := s.svc.Revive(r.Context(), r.PathValue("uid"))
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
 }
 
 // ---------------------------------------------------------------------------

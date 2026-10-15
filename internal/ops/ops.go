@@ -520,6 +520,15 @@ func (s *Service) Travel(ctx context.Context, uid string) (*OpResult, error) {
 	}, nil
 }
 
+// Revive asks the gateway to clear an account cooldown from the live balance.
+func (s *Service) Revive(ctx context.Context, uid string) (map[string]any, error) {
+	res, err := s.gw.ReviveAccount(ctx, uid)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
 // CreditsFor 主动查询单账号积分（结果进缓存）。
 func (s *Service) CreditsFor(ctx context.Context, uid string) (*upstream.Credits, error) {
 	a, err := s.loadAccount(uid)

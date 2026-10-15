@@ -119,7 +119,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
   }
 
   /** runSingle 执行单账号操作并展示结果。 */
-  const runSingle = async (a: Account, action: 'checkin' | 'refresh' | 'travel' | 'credits') => {
+  const runSingle = async (a: Account, action: 'checkin' | 'refresh' | 'travel' | 'credits' | 'revive') => {
     setBusyUid(a.uid)
     setNotice(null)
     try {
@@ -133,6 +133,12 @@ export default function Accounts({ session }: { session: SessionInfo }) {
         setNotice({
           kind: res.ok ? 'ok' : 'error',
           text: `${displayName(a)}：${res.message}${res.reward ? `（+${res.reward}）` : ''}`,
+        })
+      } else if (action === 'revive') {
+        const res = await api.accountRevive(a.uid)
+        setNotice({
+          kind: res.ok ? 'ok' : 'error',
+          text: `${displayName(a)}：${String(res.message ?? '已请求解冻')}`,
         })
       } else {
         const c = await api.accountCredits(a.uid)
@@ -224,7 +230,7 @@ export default function Accounts({ session }: { session: SessionInfo }) {
             <button className="ios-account-identity" onClick={() => setDetailUid(a.uid)}><strong>{displayName(a)}</strong><span>{a.uid.slice(0, 8)}{a.in_gateway && a.in_flight > 0 ? ` · 在途 ${a.in_flight}` : ''}</span></button>
             <div className="ios-account-status"><Badge cls={b.cls}>{b.text}</Badge>{a.cooling && <small>{coolKindText(a.cool_kind)} · {fmtDuration(a.cool_remaining_sec)}</small>}{a.disabled && a.reason && <small>{a.reason}</small>}</div>
             <div className="ios-account-balance"><strong>{fmtNum(a.live_credits ?? a.credits)}</strong><small>积分</small></div>
-            <div className="ios-account-actions"><QuickButton label="签到" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'checkin')} /><QuickButton label="刷新" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'refresh')} /><QuickButton label="猫猫" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'travel')} /><QuickButton label="积分" busy={busy} disabled={busy} onClick={() => void runSingle(a, 'credits')} /><QuickButton label="模型" busy={false} disabled={false} onClick={() => setModelUid(a.uid)} /><button className="ios-danger-button" disabled={busy || writeDisabled || !session.dangerous_ops || !a.has_file} onClick={() => setDeleteTarget(a)} title="删除账号凭证"><Trash2 size={15} /></button></div>
+            <div className="ios-account-actions"><QuickButton label="签到" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'checkin')} /><QuickButton label="刷新" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'refresh')} /><QuickButton label="猫猫" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'travel')} /><QuickButton label="积分" busy={busy} disabled={busy} onClick={() => void runSingle(a, 'credits')} /><QuickButton label="解冻" busy={busy} disabled={busy || writeDisabled} onClick={() => void runSingle(a, 'revive')} /><QuickButton label="模型" busy={false} disabled={false} onClick={() => setModelUid(a.uid)} /><button className="ios-danger-button" disabled={busy || writeDisabled || !session.dangerous_ops || !a.has_file} onClick={() => setDeleteTarget(a)} title="删除账号凭证"><Trash2 size={15} /></button></div>
           </article> })}
         </div>}
       </section>

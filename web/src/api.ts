@@ -103,6 +103,7 @@ export const api = {
   accountRefresh: (uid: string) => post<OpResult>(`/api/accounts/${encodeURIComponent(uid)}/refresh`),
   accountTravel: (uid: string) => post<OpResult>(`/api/accounts/${encodeURIComponent(uid)}/travel`),
   accountCredits: (uid: string) => post<Credits>(`/api/accounts/${encodeURIComponent(uid)}/credits`),
+  accountRevive: (uid: string) => post<Record<string, unknown>>(`/api/accounts/${encodeURIComponent(uid)}/revive`),
 
   // 单账号模型
   accountModels: (uid: string) => get<{ uid: string; models: Array<{ id: string; name?: string; public_name: string; enabled: boolean; context_length?: number; max_output_tokens?: number }>; enabled: string[] | null; aliases: Record<string, string> | null; account?: string; realm?: string }>(`/api/accounts/${encodeURIComponent(uid)}/models`),

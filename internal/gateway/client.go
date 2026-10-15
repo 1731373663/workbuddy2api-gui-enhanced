@@ -219,6 +219,23 @@ func (c *Client) SaveAccountModels(ctx context.Context, uid string, enabled []st
 	return nil
 }
 
+// ReviveAccount asks the gateway to clear an account cooldown once the live
+// balance confirms it still has credits.
+func (c *Client) ReviveAccount(ctx context.Context, uid string) (map[string]any, error) {
+	resp, err := c.do(ctx, http.MethodPost, "/v1/accounts/"+url.PathEscape(uid)+"/revive", []byte("{}"))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	var out map[string]any
+	_ = json.Unmarshal(raw, &out)
+	if resp.StatusCode != http.StatusOK {
+		return out, fmt.Errorf("解冻失败 HTTP %d: %s", resp.StatusCode, truncate(string(raw), 200))
+	}
+	return out, nil
+}
+
 // ChatResult 非流式聊天结果。
 type ChatResult struct {
 	Content          string `json:"content"`
